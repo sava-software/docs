@@ -67,9 +67,20 @@ description: "Set Up Your Dependencies"
       </repositories>
       ```
 
-      ```
-      console.log("Hello World");
-      ```
+      ```markup conf/settings.xml
+        <servers>
+            <server>
+                <id>gpr-sava</id>
+                <username>GITHUB_USERNAME</username>
+                <password>GITHUB_PERSONAL_ACCESS_TOKEN</password>
+            </server>
+            <server>
+                <id>gpr-json-iterator</id>
+                <username>GITHUB_USERNAME</username>
+                <password>GITHUB_PERSONAL_ACCESS_TOKEN</password>
+            </server>
+        </servers>
+        ```
     </CodeGroup>
   </Tab>
 </Tabs>
