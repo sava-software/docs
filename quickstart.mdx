@@ -12,27 +12,27 @@ description: "Set Up Your Dependencies"
   <Tab title="Gradle">
     <CodeGroup>
 ```groovy build.gradle
-  repositories {
-    maven {
-      url = "https://maven.pkg.github.com/sava-software/sava"
-      credentials {
-        username = GITHUB_USERNAME
-        password = GITHUB_PERSONAL_ACCESS_TOKEN
-      }
-    }
-    maven {
-      url = "https://maven.pkg.github.com/comodal/json-iterator"
-      credentials {
-        username = GITHUB_USERNAME
-        password = GITHUB_PERSONAL_ACCESS_TOKEN
-      }
+repositories {
+  maven {
+    url = "https://maven.pkg.github.com/sava-software/sava"
+    credentials {
+      username = GITHUB_USERNAME
+      password = GITHUB_PERSONAL_ACCESS_TOKEN
     }
   }
-  
-  dependencies {
-    implementation "software.sava:sava-core:$VERSION"
-    implementation "software.sava:sava-rpc:$VERSION"
+  maven {
+    url = "https://maven.pkg.github.com/comodal/json-iterator"
+    credentials {
+      username = GITHUB_USERNAME
+      password = GITHUB_PERSONAL_ACCESS_TOKEN
+    }
   }
+}
+
+dependencies {
+  implementation "software.sava:sava-core:$VERSION"
+  implementation "software.sava:sava-rpc:$VERSION"
+}
 ```
     </CodeGroup>
   </Tab>
