@@ -29,7 +29,7 @@
     {
       "group": "Get Started",
       "pages": [
-        "introduction",
+        "welcome",
         "quickstart"
       ]
     }
