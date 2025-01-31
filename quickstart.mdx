@@ -11,35 +11,35 @@ description: "Set Up Your Dependencies"
 <Tabs>
   <Tab title="Gradle">
     <CodeGroup>
-```groovy build.gradle
-repositories {
-  maven {
-    url = "https://maven.pkg.github.com/sava-software/sava"
-    credentials {
-      username = GITHUB_USERNAME
-      password = GITHUB_PERSONAL_ACCESS_TOKEN
-    }
-  }
-  maven {
-    url = "https://maven.pkg.github.com/comodal/json-iterator"
-    credentials {
-      username = GITHUB_USERNAME
-      password = GITHUB_PERSONAL_ACCESS_TOKEN
-    }
-  }
-}
+      ```groovy build.gradle
+      repositories {
+        maven {
+          url = "https://maven.pkg.github.com/sava-software/sava"
+          credentials {
+            username = GITHUB_USERNAME
+            password = GITHUB_PERSONAL_ACCESS_TOKEN
+          }
+        }
+        maven {
+          url = "https://maven.pkg.github.com/comodal/json-iterator"
+          credentials {
+            username = GITHUB_USERNAME
+            password = GITHUB_PERSONAL_ACCESS_TOKEN
+          }
+        }
+      }
 
-dependencies {
-  implementation "software.sava:sava-core:$VERSION"
-  implementation "software.sava:sava-rpc:$VERSION"
-}
-```
+      dependencies {
+        implementation "software.sava:sava-core:$VERSION"
+        implementation "software.sava:sava-rpc:$VERSION"
+      }
+      ```
     </CodeGroup>
   </Tab>
 
   <Tab title="Maven">
     <CodeGroup>
-      ```java pom.xml
+      ```markup pom.xml
       <dependencies>
           <dependency>
               <groupId>software.sava</groupId>
@@ -65,6 +65,10 @@ dependencies {
             <url>https://maven.pkg.github.com/comodal/json-iterator</url>
         </repository>
       </repositories>
+      ```
+
+      ```
+      console.log("Hello World");
       ```
     </CodeGroup>
   </Tab>
