@@ -36,7 +36,13 @@
     {
       "group": "Libraries",
       "pages": [
-        "programs"
+        {
+          "group": "Programs",
+          "pages": [
+            "/libraries/programs/programs-gh",
+            "/libraries/programs/programs"
+          ]
+        }
       ]
     }
   ],
