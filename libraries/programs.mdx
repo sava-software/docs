@@ -1,10 +1,15 @@
 ---
-title: "Solana Programs"
-mode: "wide"
-sidebarTitle: "Programs"
+title: "New file"
 description: "Native Solana Program Utilities and Clients."
-url: "https://github.com/sava-software/sava"
-icon": "arrow-up-right-from-square"
+---
+
+<Card title="GitHub Repository" icon="github" horizontal={true} href="https://github.com/sava-software/solana-programs">
+
+</Card>
+
+---
+title: "New file"
+description: "Native Solana Program Utilities and Clients."
 ---
 
 ## Durable Nonce Transactions
@@ -92,7 +97,7 @@ try (final var httpClient = HttpClient.newHttpClient()) {
 
 ### Create & Send Durable Nonce Transaction
 
-```java
+````java
 final var signer = ...
 final var nonceAccountKey = PublicKey.fromBase58Encoded("");
 final var sendToKey = PublicKey.fromBase58Encoded("");
@@ -134,4 +139,8 @@ try (final var httpClient = HttpClient.newHttpClient()) {
   final var sig = sendTransactionFuture.join();
   System.out.println("Confirmed transaction " + sig);
 }
-```
+```---
+title: 'New file'
+description: 'Description of your new file.'
+---
+````
