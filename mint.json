@@ -6,7 +6,7 @@
     "light": "/logo/sava-logo-dark.svg"
   },
   "favicon": "/favicon.svg",
-  "theme": "venus",
+  "theme": "quill",
   "colors": {
     "primary": "#9945FF",
     "light": "#14F195",
