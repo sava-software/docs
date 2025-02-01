@@ -39,12 +39,12 @@
     "og:title": "Sava | Solana Java SDK",
     "og:url": "https://sava.software/",
     "og:description": "Sava is a Java SDK for building Solana services.",
-    "og:image": "/images/sava-preview.jpg",
+    "og:image": "/sava-preview.jpg",
     "og:image:width": "1200",
     "og:image:height": "630",
     "twitter:title": "Sava | Solana Java SDK",
     "twitter:description": "Sava is a Java SDK for building Solana services.",
-    "twitter:image": "/images/sava-preview.jpg",
+    "twitter:image": "/sava-preview.jpg",
     "twitter:site": "@sava_software"
   },
   "footerSocials": {
