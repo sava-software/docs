@@ -30,7 +30,8 @@
       "group": "Get Started",
       "pages": [
         "welcome",
-        "quickstart"
+        "quickstart",
+        "programs"
       ]
     }
   ],
