@@ -30,7 +30,12 @@
       "group": "Get Started",
       "pages": [
         "welcome",
-        "quickstart",
+        "quickstart"
+      ]
+    },
+    {
+      "group": "Libraries",
+      "pages": [
         "programs"
       ]
     }
