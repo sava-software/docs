@@ -34,6 +34,14 @@
       ]
     }
   ],
+  "metadata": {
+    "og:site_name": "Solana Java SDK",
+    "og:title": "Sava | Solana Java SDK",
+    "og:url": "https://sava.software/",
+    "og:description": "Sava is a Java SDK for building Solana services.",
+    "og:image": "/images/sava-preview.jpg",
+    "twitter:site": "@sava_software"
+  },
   "footerSocials": {
     "x": "https://x.com/sava_software",
     "github": "https://github.com/sava-software/"
