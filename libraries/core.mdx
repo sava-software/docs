@@ -7,7 +7,7 @@ description: "Common Solana Cryptography & Serialization Utilities."
 
 # Features
 
-* Transaction (de)serialization.
+* [Transaction (de)serialization](#transaction-deserialization)
   * Legacy
   * v0
 * [Accounts Types:](https://github.com/sava-software/sava/tree/main/core/src/main/java/software/sava/core/accounts)
@@ -16,9 +16,9 @@ description: "Common Solana Cryptography & Serialization Utilities."
   * Sysvar
     * Clock
     * EpochRewards
-  * [Common collection of main-net addresses](https://github.com/sava-software/sava/blob/main/core/src/main/java/software/sava/core/accounts/SolanaAccounts.java)
-* Ed25519 [public](https://github.com/sava-software/sava/blob/main/core/src/main/java/software/sava/core/accounts/PublicKey.java) and [private](https://github.com/sava-software/sava/blob/main/core/src/main/java/software/sava/core/accounts/Signer.java) keys.
-* Program derived addresses.
+* [Common collection of main-net addresses](https://github.com/sava-software/sava/blob/main/core/src/main/java/software/sava/core/accounts/SolanaAccounts.java)
+* Ed25519 [public](https://github.com/sava-software/sava/blob/main/core/src/main/java/software/sava/core/accounts/PublicKey.java) and [private](https://github.com/sava-software/sava/blob/main/core/src/main/java/software/sava/core/accounts/Signer.java) keys
+* Program derived addresses
 * [Borsh (de)serialization](https://github.com/sava-software/sava/blob/main/core/src/main/java/software/sava/core/borsh/Borsh.java)
 * [Encoding:](https://github.com/sava-software/sava/tree/main/core/src/main/java/software/sava/core/encoding)
   * [Base58](https://github.com/sava-software/sava/blob/main/core/src/main/java/software/sava/core/encoding/Base58.java)
@@ -92,7 +92,7 @@ Encoded 32 byte private key.
 ## Transaction Deserialization
 
 The [TransactionSkeleton](https://github.com/sava-software/sava/blob/main/core/src/main/java/software/sava/core/tx/TransactionSkeleton.java)
-class provides a lightweight view over transaction data. Allowing for partial views or a complete reconstruction of
+interface provides a lightweight view over transaction data. Allowing for partial views or complete reconstruction of
 a [Transaction](https://github.com/sava-software/sava/blob/main/core/src/main/java/software/sava/core/tx/Transaction.java).
 
 ### Legacy
@@ -105,7 +105,7 @@ Instruction[] instructions = skeleton.parseLegacyInstructions();
 Transaction transaction = skeleton.createTransaction()
 ```
 
-### Version 0
+### Versioned
 
 ```java
 byte[] v0TransactionData = ...;
