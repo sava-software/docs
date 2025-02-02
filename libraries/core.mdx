@@ -1,6 +1,7 @@
 ---
 title: "Core"
 description: "Common Solana Cryptography & Serialization Utilities."
+mode: "wide"
 ---
 
 <Card title="GitHub Repository" icon="github" horizontal={true} href="https://github.com/sava-software/sava"/>
@@ -23,8 +24,12 @@ description: "Common Solana Cryptography & Serialization Utilities."
 * [Encoding:](https://github.com/sava-software/sava/tree/main/core/src/main/java/software/sava/core/encoding)
   * [Base58](https://github.com/sava-software/sava/blob/main/core/src/main/java/software/sava/core/encoding/Base58.java)
   * [Hex](https://github.com/sava-software/sava/blob/main/core/src/main/java/software/sava/core/encoding/Jex.java)
-  * [Little Endian Number Bytes](https://github.com/sava-software/sava/blob/main/core/src/main/java/software/sava/core/encoding/ByteUtil.java)
+  * [Little Endian Numbers](https://github.com/sava-software/sava/blob/main/core/src/main/java/software/sava/core/encoding/ByteUtil.java)
   * [Compact u16](https://github.com/sava-software/sava/blob/main/core/src/main/java/software/sava/core/encoding/CompactU16Encoding.java)
+
+## [Dependencies](https://github.com/sava-software/sava/blob/main/core/src/main/java/module-info.java)
+  - java.base
+  - [Bouncy Castle](https://www.bouncycastle.org/download/bouncy-castle-java/#latest)
 
 ## Private Key Pair Parsing
 
@@ -92,7 +97,7 @@ Encoded 32 byte private key.
 ## Transaction Deserialization
 
 The [TransactionSkeleton](https://github.com/sava-software/sava/blob/main/core/src/main/java/software/sava/core/tx/TransactionSkeleton.java)
-interface provides a lightweight view over transaction data. Allowing for partial views or complete reconstruction of
+interface provides a lightweight view over transaction data. Allowing for partial introspection or complete reconstruction of
 a [Transaction](https://github.com/sava-software/sava/blob/main/core/src/main/java/software/sava/core/tx/Transaction.java).
 
 ### Legacy

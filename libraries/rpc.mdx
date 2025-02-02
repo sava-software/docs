@@ -1,4 +1,152 @@
 ---
 title: 'RPC'
 description: 'HTTP and WebSocket JSON RPC Clients.'
+mode: "wide"
 ---
+
+See the official Solana docs for context on each [HTTP RPC method](https://solana.com/docs/rpc/http)
+and [WebSocket RPC methods](https://solana.com/docs/rpc/websocket).
+
+## [Dependencies](https://github.com/sava-software/sava/blob/main/rpc/src/main/java/module-info.java)
+  - software.sava.core
+  - java.net.http
+  - [JSON Iterator](https://github.com/comodal/json-iterator?tab=readme-ov-file#json-iterator)
+
+## Get & Parse Accounts
+
+```java
+try (final var httpClient = HttpClient.newHttpClient()) {
+    final var rpcClient = SolanaRpcClient.createClient(
+        SolanaNetwork.MAIN_NET.getEndpoint(),
+        httpClient
+    );
+
+    final var accountInfo = rpcClient.getAccountInfo(
+        PublicKey.fromBase58Encoded("SPc3dYPMXGM6Do5zakpUESxBLadBNDWQAJ6ww6QZALT"),
+    ).join();
+
+    final byte[] tableData = accountInfo.data();
+    final var table = AddressLookupTable.read(accountInfo.pubKey(), tableData);
+    System.out.println(table);
+}
+```
+
+```java
+try (final var httpClient = HttpClient.newHttpClient()) {
+    final var rpcClient = SolanaRpcClient.createClient(
+        SolanaNetwork.MAIN_NET.getEndpoint(),
+        httpClient
+    );
+
+    final var accountInfo = rpcClient.getAccountInfo(
+        PublicKey.fromBase58Encoded("SPc3dYPMXGM6Do5zakpUESxBLadBNDWQAJ6ww6QZALT"),
+        AddressLookupTable.FACTORY
+    ).join();
+
+    final AddressLookupTable table = accountInfo.data();
+    System.out.println(table);
+}
+```
+
+## Query Program Accounts with Filters
+
+Retrieve all lookup tables which are active and frozen.
+
+<Info>
+  **Note**: You will need access to an RPC node which has getProgramAccounts enabled, such as [Helius](https://www.helius.dev/).
+</Info>
+
+```java
+try (final var httpClient = HttpClient.newHttpClient()) {
+    final var rpcClient = SolanaRpcClient.createClient(
+        URI.create("https://mainnet.helius-rpc.com/?api-key="),
+        httpClient
+    );
+
+    final byte[] stillActive = new byte[Long.BYTES];
+    ByteUtil.putInt64LE(stillActive, 0, Clock.MAX_SLOT);
+    final var activeFilter = Filter.createMemCompFilter(DEACTIVATION_SLOT_OFFSET, stillActive);
+    final var noAuthorityFilter = Filter.createMemCompFilter(AUTHORITY_OPTION_OFFSET, new byte[]{0});
+
+    final var accountInfoFuture = rpcClient.getProgramAccounts(
+        SolanaAccounts.MAIN_NET.addressLookupTableProgram(),
+        List.of( // Filter all active frozen tables.
+            activeFilter,
+            noAuthorityFilter
+        ),
+        AddressLookupTable.FACTORY
+    );
+
+    final var accountInfoList = accountInfoFuture.join();
+    accountInfoList.stream()
+        .map(AccountInfo::data)
+        .forEach(System.out::println);
+
+    System.out.format("Retrieved %d tables which are active and frozen.%n", accountInfoList.size());
+}
+```
+
+## Stream Program Accounts
+
+### Token Accounts
+
+```java
+final var solanaAccounts = SolanaAccounts.MAIN_NET;
+final var tokenProgram = solanaAccounts.tokenProgram();
+final var tokenOwner = PublicKey.fromBase58Encoded("");
+
+try (final var httpClient = HttpClient.newHttpClient()) {
+    final var webSocket = SolanaRpcWebsocket.build()
+        .uri(SolanaNetwork.MAIN_NET.getWebSocketEndpoint())
+        .webSocketBuilder(httpClient)
+        .commitment(Commitment.CONFIRMED)
+        .solanaAccounts(solanaAccounts)
+        .onOpen(ws -> System.out.println("Websocket connected to " + ws.endpoint()))
+        .create();
+
+    webSocket.programSubscribe(
+        tokenProgram,
+        List.of(
+            Filter.createDataSizeFilter(TokenAccount.BYTES),
+            Filter.createMemCompFilter(TokenAccount.OWNER_OFFSET, tokenOwner)
+        ),
+        accountInfo -> {
+            final var tokenAccount = TokenAccount.read(accountInfo.pubKey(), accountInfo.data());
+            System.out.println(tokenAccount);
+        }
+    );
+
+    webSocket.connect();
+    Thread.sleep(Integer.MAX_VALUE);
+}
+```
+
+### Address Lookup Tables
+
+```java
+try (final var httpClient = HttpClient.newHttpClient()) {
+    final var webSocket = SolanaRpcWebsocket.build()
+        .uri(SolanaNetwork.MAIN_NET.getWebSocketEndpoint())
+        .webSocketBuilder(httpClient)
+        .commitment(Commitment.CONFIRMED)
+        .onClose((_, statusCode, reason) -> System.out.format("%d: %s%n", statusCode, reason))
+        .onError((_, throwable) -> throwable.printStackTrace())
+        .create();
+
+    webSocket.programSubscribe(SolanaAccounts.MAIN_NET.addressLookupTableProgram(), accountInfo -> {
+        final var table = AddressLookupTable.read(accountInfo.pubKey(), accountInfo.data());
+        //  {
+        //    "address": "Fuy3RVz8u2pNaeGLHG7wp8eBg7JA3vzBcDB82PXTGAHz",
+        //    "deactivationSlot": 18446744073709551615,
+        //    "lastExtendedSlot": 283587161,
+        //    "lastExtendedSlotStartIndex": 0,
+        //    "authority": "C5vPh26poBM8mYbdEnDMWGMhcrQrb84eULChZKkExDG1",
+        //    "accounts": "[675MHPyK53QJUNWyjYb3gyse5podtFRdsj61ssRcPEUr, C5vPh26poBM8mYbdEnDMWGMhcrQrb84eULChZKkExDG1, 5hvPX4JoMwKCoYQomQRF4jutJ3JDraj2rGoWsvUZGtyN, 2TzAT9jnyAxna1N2hASrPXftHyVU9mByCHMNKTLtRX82]"
+        //  }
+        System.out.println(table);
+    });
+
+    webSocket.connect();
+    Thread.sleep(Integer.MAX_VALUE);
+}
+```

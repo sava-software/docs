@@ -38,6 +38,7 @@
       "group": "Libraries",
       "pages": [
         "/libraries/core",
+        "/libraries/rpc",
         "/libraries/programs"
       ]
     }
