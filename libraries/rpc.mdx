@@ -4,8 +4,8 @@ description: 'HTTP and WebSocket JSON RPC Clients.'
 mode: "wide"
 ---
 
-See the official Solana docs for context on each [HTTP RPC method](https://solana.com/docs/rpc/http)
-and [WebSocket RPC methods](https://solana.com/docs/rpc/websocket).
+See the official Solana docs for context on each [HTTP](https://solana.com/docs/rpc/http)
+and [WebSocket](https://solana.com/docs/rpc/websocket) RPC method.
 
 <Card title="GitHub Repository" icon="github" horizontal={true} href="https://github.com/sava-software/sava"/>
 
@@ -14,7 +14,9 @@ and [WebSocket RPC methods](https://solana.com/docs/rpc/websocket).
   - java.net.http
   - [JSON Iterator](https://github.com/comodal/json-iterator?tab=readme-ov-file#json-iterator)
 
-## Get & Parse Accounts
+## HTTP
+
+### Get & Parse Accounts
 
 ```java
 try (final var httpClient = HttpClient.newHttpClient()) {
@@ -50,7 +52,7 @@ try (final var httpClient = HttpClient.newHttpClient()) {
 }
 ```
 
-## Query Program Accounts with Filters
+### Query Program Accounts with [Filters](https://solana.com/docs/rpc#filter-criteria)
 
 Retrieve all lookup tables which are active and frozen.
 
@@ -88,9 +90,11 @@ try (final var httpClient = HttpClient.newHttpClient()) {
 }
 ```
 
-## Stream Program Accounts
+## WebSocket
 
-### Token Accounts
+### Stream Program Accounts
+
+#### Token Accounts
 
 ```java
 final var solanaAccounts = SolanaAccounts.MAIN_NET;
@@ -123,7 +127,7 @@ try (final var httpClient = HttpClient.newHttpClient()) {
 }
 ```
 
-### Address Lookup Tables
+#### Address Lookup Tables
 
 ```java
 try (final var httpClient = HttpClient.newHttpClient()) {
