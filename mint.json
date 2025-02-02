@@ -37,6 +37,7 @@
     {
       "group": "Libraries",
       "pages": [
+        "/libraries/core",
         "/libraries/programs"
       ]
     }
