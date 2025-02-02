@@ -121,6 +121,6 @@ PublicKey[] tableAccounts =  skeleton.lookupTableAccounts();
 // ... Fetch table accounts (See RPC) ...
 AddressLookupTable lookupTable = ...;
 AccountMeta[] accounts = skeleton.parseAccounts(lookupTable);
-List<Instruction> instructions = Arrays.asList(skeleton.parseInstructions(accounts));
+Instruction[] instructions = skeleton.parseInstructions(accounts);
 Transaction transaction = skeleton.createTransaction(instructions, lookupTable);
 ```
