@@ -41,6 +41,12 @@
         "/libraries/rpc",
         "/libraries/programs"
       ]
+    },
+    {
+      "group": "Utilities",
+      "pages": [
+        "/utilities/vanity"
+      ]
     }
   ],
   "metadata": {
