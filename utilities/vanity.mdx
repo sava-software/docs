@@ -1,6 +1,7 @@
 ---
 title: "Vanity Address Generator"
 sidebarTitle: "Vanity"
+description: "Generate addresses with a defined prefix or suffix."
 mode: "wide"
 ---
 
@@ -32,7 +33,7 @@ gpr.token=GITHUB_TOKEN
 ./vanity/genKeys.sh --prefix="abc"
 ```
 
-### Args
+## Args
 
 * A `prefix` and/or `suffix` must be provided.
 * `numThreads` defaults to half of the systems CPU's.
@@ -43,7 +44,7 @@ gpr.token=GITHUB_TOKEN
     * `ctrl+a -> d` to detach
     * `screen -r` to re-attach
 
-#### Run Control
+### Run Control
 
 - jvmArgs="-server -Xms64M -Xmx128M"
 - screen=0
@@ -54,14 +55,14 @@ gpr.token=GITHUB_TOKEN
 - [o | outDir]='.keys'
 - [sv | sigVerify]=false
 
-#### Prefix
+### Prefix
 
 - [p | prefix]=""
 - [pc | pCaseSensitive]=false
 - [pn | p1337Numbers]=true
 - [pl | p1337Letters]=true
 
-#### Suffix
+### Suffix
 
 - [s | suffix]=""
 - [sc | sCaseSensitive]=false
