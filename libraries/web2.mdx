@@ -55,8 +55,10 @@ try (var httpClient = HttpClient.newHttpClient()) {
 
 ### Quote & Swap
 
+Fetches verified tokens, gets a quote for buying 1 USDC worth of SOL, requests a swap transaction and signs the transaction.
+
 ```java
-var userPublicKey = PublicKey.fromBase58Encoded("<KEY>");
+software.sava.core.accounts.Signer signer = ...
 
 var tokens = jupiterClient.verifiedTokenMap().join();
 
@@ -92,7 +94,7 @@ System.out.println(quote);
 
 var swapRequest = JupiterSwapRequest
     .buildRequest()
-    .userPublicKey(userPublicKey)
+    .userPublicKey(signer.publicKey())
     .skipUserAccountsRpcCalls(true)
     .useSharedAccounts(true)
     .createRequest();
@@ -102,5 +104,6 @@ var swapTransaction = jupiterClient.swap(
     quote.quoteResponseJson()
 ).join();
 var txBytes = swapTransaction.swapTransaction();
-// sign and send transaction
+Transaction.sign(signer, txBytes);
+// send transaction
 ```

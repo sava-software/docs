@@ -20,23 +20,23 @@ description: "Native Solana Program Utilities and Clients."
 ### Create & Initialize Nonce Account
 
 ```java
-final Signer signer = ...
+Signer signer = ...
  
-final var rpcEndpoint = SolanaNetwork.MAIN_NET.getEndpoint();
-try (final var httpClient = HttpClient.newHttpClient()) {
-  final var rpcClient = SolanaRpcClient.createClient(rpcEndpoint, httpClient);
+var rpcEndpoint = SolanaNetwork.MAIN_NET.getEndpoint();
+try (var httpClient = HttpClient.newHttpClient()) {
+  var rpcClient = SolanaRpcClient.createClient(rpcEndpoint, httpClient);
 
-  final var blockHashFuture = rpcClient.getLatestBlockHash();
-  final var minRentFuture = rpcClient.getMinimumBalanceForRentExemption(NonceAccount.BYTES);
+  var blockHashFuture = rpcClient.getLatestBlockHash();
+  var minRentFuture = rpcClient.getMinimumBalanceForRentExemption(NonceAccount.BYTES);
 
-  final var solanaAccounts = SolanaAccounts.MAIN_NET;
-  final var nonceAccountWithSeed = PublicKey.createOffCurveAccountWithAsciiSeed(
+  var solanaAccounts = SolanaAccounts.MAIN_NET;
+  var nonceAccountWithSeed = PublicKey.createOffCurveAccountWithAsciiSeed(
       signer.publicKey(),
       "nonce",
       solanaAccounts.systemProgram()
   );
 
-  final var initializeNonceAccountIx = SystemProgram.initializeNonceAccount(
+  var initializeNonceAccountIx = SystemProgram.initializeNonceAccount(
       solanaAccounts,
       nonceAccountWithSeed.publicKey(),
       signer.publicKey()
@@ -50,8 +50,8 @@ try (final var httpClient = HttpClient.newHttpClient()) {
       signer.publicKey()
   );
 
-  final long minRent = minRentFuture.join();
-  final var createNonceAccountIx = SystemProgram.createAccountWithSeed(
+  long minRent = minRentFuture.join();
+  var createNonceAccountIx = SystemProgram.createAccountWithSeed(
       solanaAccounts.invokedSystemProgram(),
       signer.publicKey(),
       nonceAccountWithSeed,
@@ -60,15 +60,15 @@ try (final var httpClient = HttpClient.newHttpClient()) {
       solanaAccounts.systemProgram()
   );
 
-  final var instructions = List.of(createNonceAccountIx, initializeNonceAccountIx);
-  final var transaction = Transaction.createTx(signer.publicKey(), instructions);
+  var instructions = List.of(createNonceAccountIx, initializeNonceAccountIx);
+  var transaction = Transaction.createTx(signer.publicKey(), instructions);
 
-  final var blockHash = blockHashFuture.join().blockHash();
+  var blockHash = blockHashFuture.join().blockHash();
   transaction.setRecentBlockHash(blockHash);
   transaction.sign(signer);
 
-  final var base64Encoded = transaction.base64EncodeToString();
-  final var sendTransactionFuture = rpcClient.sendTransaction(base64Encoded);
+  var base64Encoded = transaction.base64EncodeToString();
+  var sendTransactionFuture = rpcClient.sendTransaction(base64Encoded);
   System.out.format("""
           Creating nonce account %s
           https://explorer.solana.com/tx/%s
@@ -78,7 +78,7 @@ try (final var httpClient = HttpClient.newHttpClient()) {
       transaction.getBase58Id()
   );
 
-  final var sig = sendTransactionFuture.join();
+  var sig = sendTransactionFuture.join();
   System.out.format("""
           Confirmed transaction %s
           https://solscan.io/account/%s
@@ -88,8 +88,8 @@ try (final var httpClient = HttpClient.newHttpClient()) {
       nonceAccountWithSeed.publicKey()
   );
 
-  final var nonceAccountInfo = rpcClient.getAccountInfo(nonceAccountWithSeed.publicKey()).join();
-  final var nonceAccount = NonceAccount.read(nonceAccountInfo);
+  var nonceAccountInfo = rpcClient.getAccountInfo(nonceAccountWithSeed.publicKey()).join();
+  var nonceAccount = NonceAccount.read(nonceAccountInfo);
   System.out.println(nonceAccount);
 }
 ```
@@ -97,35 +97,35 @@ try (final var httpClient = HttpClient.newHttpClient()) {
 ### Create & Send Durable Nonce Transaction
 
 ```java
-final var signer = ...
-final var nonceAccountKey = PublicKey.fromBase58Encoded("");
-final var sendToKey = PublicKey.fromBase58Encoded("");
-final var transferSOL = new BigDecimal("0.0");
+var signer = ...
+var nonceAccountKey = PublicKey.fromBase58Encoded("");
+var sendToKey = PublicKey.fromBase58Encoded("");
+var transferSOL = new BigDecimal("0.0");
 
-final var solanaAccounts = SolanaAccounts.MAIN_NET;
-final var rpcEndpoint = SolanaNetwork.MAIN_NET.getEndpoint();
-try (final var httpClient = HttpClient.newHttpClient()) {
-  final var rpcClient = SolanaRpcClient.createClient(rpcEndpoint, httpClient);
+var solanaAccounts = SolanaAccounts.MAIN_NET;
+var rpcEndpoint = SolanaNetwork.MAIN_NET.getEndpoint();
+try (var httpClient = HttpClient.newHttpClient()) {
+  var rpcClient = SolanaRpcClient.createClient(rpcEndpoint, httpClient);
 
-  final var nonceAccountInfo = rpcClient.getAccountInfo(nonceAccountKey).join();
-  final var nonceAccount = NonceAccount.read(nonceAccountInfo);
+  var nonceAccountInfo = rpcClient.getAccountInfo(nonceAccountKey).join();
+  var nonceAccount = NonceAccount.read(nonceAccountInfo);
   System.out.println(nonceAccount);
 
-  final var advanceNonceIx = nonceAccount.advanceNonceAccount(solanaAccounts);
-  final var transferIx = SystemProgram.transfer(
+  var advanceNonceIx = nonceAccount.advanceNonceAccount(solanaAccounts);
+  var transferIx = SystemProgram.transfer(
       solanaAccounts.invokedSystemProgram(),
       signer.publicKey(),
       sendToKey,
       LamportDecimal.fromBigDecimal(transferSOL).longValue()
   );
 
-  final var instructions = List.of(advanceNonceIx, transferIx);
-  final var transaction = Transaction.createTx(signer.publicKey(), instructions);
+  var instructions = List.of(advanceNonceIx, transferIx);
+  var transaction = Transaction.createTx(signer.publicKey(), instructions);
   transaction.setRecentBlockHash(nonceAccount.nonce());
   transaction.sign(signer);
 
-  final var base64Encoded = transaction.base64EncodeToString();
-  final var sendTransactionFuture = rpcClient.sendTransaction(base64Encoded);
+  var base64Encoded = transaction.base64EncodeToString();
+  var sendTransactionFuture = rpcClient.sendTransaction(base64Encoded);
   System.out.format("""
           Transferring %s SOL from %s to %s.
           https://explorer.solana.com/tx/%s
@@ -135,7 +135,7 @@ try (final var httpClient = HttpClient.newHttpClient()) {
       transaction.getBase58Id()
   );
 
-  final var sig = sendTransactionFuture.join();
+  var sig = sendTransactionFuture.join();
   System.out.println("Confirmed transaction " + sig);
 }
 ```
