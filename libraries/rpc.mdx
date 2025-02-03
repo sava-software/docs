@@ -26,7 +26,7 @@ try (final var httpClient = HttpClient.newHttpClient()) {
     );
 
     final var accountInfo = rpcClient.getAccountInfo(
-        PublicKey.fromBase58Encoded("SPc3dYPMXGM6Do5zakpUESxBLadBNDWQAJ6ww6QZALT"),
+        PublicKey.fromBase58Encoded("6T6vqb3VykNToz4sqY5C29Psb8iNUuVZPAqJXbAgorVF"),
     ).join();
 
     final byte[] tableData = accountInfo.data();
@@ -43,7 +43,7 @@ try (final var httpClient = HttpClient.newHttpClient()) {
     );
 
     final var accountInfo = rpcClient.getAccountInfo(
-        PublicKey.fromBase58Encoded("SPc3dYPMXGM6Do5zakpUESxBLadBNDWQAJ6ww6QZALT"),
+        PublicKey.fromBase58Encoded("6T6vqb3VykNToz4sqY5C29Psb8iNUuVZPAqJXbAgorVF"),
         AddressLookupTable.FACTORY
     ).join();
 
@@ -141,14 +141,6 @@ try (final var httpClient = HttpClient.newHttpClient()) {
 
     webSocket.programSubscribe(SolanaAccounts.MAIN_NET.addressLookupTableProgram(), accountInfo -> {
         final var table = AddressLookupTable.read(accountInfo.pubKey(), accountInfo.data());
-        //  {
-        //    "address": "Fuy3RVz8u2pNaeGLHG7wp8eBg7JA3vzBcDB82PXTGAHz",
-        //    "deactivationSlot": 18446744073709551615,
-        //    "lastExtendedSlot": 283587161,
-        //    "lastExtendedSlotStartIndex": 0,
-        //    "authority": "C5vPh26poBM8mYbdEnDMWGMhcrQrb84eULChZKkExDG1",
-        //    "accounts": "[675MHPyK53QJUNWyjYb3gyse5podtFRdsj61ssRcPEUr, C5vPh26poBM8mYbdEnDMWGMhcrQrb84eULChZKkExDG1, 5hvPX4JoMwKCoYQomQRF4jutJ3JDraj2rGoWsvUZGtyN, 2TzAT9jnyAxna1N2hASrPXftHyVU9mByCHMNKTLtRX82]"
-        //  }
         System.out.println(table);
     });
 
