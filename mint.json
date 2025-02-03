@@ -39,13 +39,13 @@
       "pages": [
         "/libraries/core",
         "/libraries/rpc",
-        "/libraries/programs",
-        "/libraries/anchor-src-gen"
+        "/libraries/programs"
       ]
     },
     {
       "group": "Utilities",
       "pages": [
+        "/libraries/anchor-src-gen",
         "/utilities/vanity"
       ]
     }
