@@ -1,0 +1,106 @@
+---
+title: "Web 2.0"
+description: "Solana Ecosystem HTTP Clients."
+mode: "wide"
+---
+
+<Card title="GitHub Repository" icon="github" horizontal={true} href="https://github.com/sava-software/solana-web2" />
+
+## [Dependencies](https://github.com/sava-software/solana-web2/blob/main/src/main/java/module-info.java)
+  - java.net.http
+  - [systems.comodal.json_iterator](https://github.com/comodal/json-iterator?tab=readme-ov-file#json-iterator)
+  - software.sava.core
+  - software.sava.rpc
+
+## Helius
+
+Implements the [priority fee API](https://docs.helius.dev/solana-apis/priority-fee-api).
+
+### Create Client
+
+```java
+try (var httpClient = HttpClient.newHttpClient()) {
+  var heliusClient = HeliusClient.createHttpClient(
+    URI.create("https://mainnet.helius-rpc.com/?api-key="),
+    httpClient
+  );
+}
+```
+
+### Recommended Transaction Priority Fee
+
+```java
+Transaction transaction = ...
+var base64EncodedTx = transaction.base64EncodeToString();
+var feeEstimate = heliusClient.getRecommendedTransactionPriorityFeeEstimate(base64EncodedTx).join();
+
+System.out.format(
+  "Mert recommends a %s micro lamport compute unit price.",
+  feeEstimate.toPlainString()
+);
+```
+
+## Jupiter
+
+Implements the [Swap](https://station.jup.ag/docs/swap-api/get-quote) and [Token](https://station.jup.ag/docs/utility/token-api) API.
+
+
+### Create Client
+
+```java
+try (var httpClient = HttpClient.newHttpClient()) {
+    var jupiterClient = JupiterClient.createClient(httpClient);
+}
+```
+
+### Quote & Swap
+
+```java
+var userPublicKey = PublicKey.fromBase58Encoded("<KEY>");
+
+var tokens = jupiterClient.verifiedTokenMap().join();
+
+var outputTokenContext = tokens.get(SolanaAccounts.MAIN_NET.wrappedSolTokenMint());
+
+var inputTokenContext = tokens.values().stream()
+    .filter(tokenContext -> tokenContext.symbol().equals("USDC"))
+    .findFirst().orElseThrow();
+
+var quoteRequest = JupiterQuoteRequest.buildRequest()
+    .swapMode(SwapMode.ExactIn)
+    .amount(inputTokenContext.fromDecimal(BigDecimal.ONE).toBigInteger())
+    .inputTokenMint(inputTokenContext.address())
+    .outputTokenMint(outputTokenContext.address())
+    .slippageBps(2)
+    .dexes(Set.of(
+        "Meteora",
+        "Meteora DLMM",
+        "Orca V2",
+        "OpenBook V2",
+        "Phoenix",
+        "Raydium",
+        "Raydium CLMM",
+        "Raydium CP",
+        "Whirlpool"
+    ))
+    .restrictIntermediateTokens(true)
+    .onlyDirectRoutes(false)
+    .create();
+
+var quote = jupiterClient.getQuote(quoteRequest).join();
+System.out.println(quote);
+
+var swapRequest = JupiterSwapRequest
+    .buildRequest()
+    .userPublicKey(userPublicKey)
+    .skipUserAccountsRpcCalls(true)
+    .useSharedAccounts(true)
+    .createRequest();
+
+var swapTransaction = jupiterClient.swap(
+    swapRequest.preSerialize(),
+    quote.quoteResponseJson()
+).join();
+var txBytes = swapTransaction.swapTransaction();
+// sign and send transaction
+```

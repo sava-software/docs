@@ -7,9 +7,9 @@ description: "Convenient program clients and generated source based on Anchor ID
 <Card title="GitHub Repository" icon="github" horizontal={true} href="https://github.com/sava-software/anchor-programs" />
 
 ## [Dependencies](https://github.com/sava-software/anchor-programs/blob/main/programs/src/main/java/module-info.java)
-  - [systems.comodal.json_iterator](https://github.com/comodal/json-iterator?tab=readme-ov-file#json-iterator)
   - java.net.http
-  - org.bouncycastle.provider
+  - [systems.comodal.json_iterator](https://github.com/comodal/json-iterator?tab=readme-ov-file#json-iterator)
+  - [org.bouncycastle.provider](https://www.bouncycastle.org/download/bouncy-castle-java/#latest)
   - software.sava.core
   - software.sava.rpc
   - software.sava.solana_programs
@@ -23,34 +23,34 @@ Prints the following at the end:
 > Limit Long 0.1 @ 111 on SOL-PERP [reduceOnly=false] [postOnly=MustPostOnly]
 
 ```java
-try (final var httpClient = HttpClient.newHttpClient()) {
-  final var rpcClient = SolanaRpcClient.createClient(SolanaNetwork.MAIN_NET.getEndpoint(), httpClient);
+try (var httpClient = HttpClient.newHttpClient()) {
+  var rpcClient = SolanaRpcClient.createClient(SolanaNetwork.MAIN_NET.getEndpoint(), httpClient);
 
   // Fetch a Drift placeOrders Transaction
-  final var txFuture = rpcClient.getTransaction(
+  var txFuture = rpcClient.getTransaction(
           "36Wnn99Y49mJ5GKiNiT3ja2q8gzSvMNrN5A3Bcn2YfCyrwY7kgQGVAu9VNzXqmWSbgzX76oUGxYNuPGM7tpPoJJS"
   );
-  final var tx = txFuture.join();
-  final byte[] txData = tx.data();
+  var tx = txFuture.join();
+  byte[] txData = tx.data();
 
-  final var skeleton = TransactionSkeleton.deserializeSkeleton(txData);
+  var skeleton = TransactionSkeleton.deserializeSkeleton(txData);
 
-  final Instruction[] instructions;
+  Instruction[] instructions;
   if (skeleton.isLegacy()) {
     instructions = skeleton.parseInstructions(skeleton.parseAccounts());
   } else {
     // Fetch Lookup tables to allow parsing of versioned transactions.
-    final int txVersion = skeleton.version();
+    int txVersion = skeleton.version();
     if (txVersion == 0) {
-      final var tableAccountInfos = rpcClient.getMultipleAccounts(
+      var tableAccountInfos = rpcClient.getMultipleAccounts(
           Arrays.asList(skeleton.lookupTableAccounts()),
           AddressLookupTable.FACTORY
       ).join();
 
-      final var lookupTables = tableAccountInfos.stream()
+      var lookupTables = tableAccountInfos.stream()
           .map(AccountInfo::data)
           .collect(Collectors.toUnmodifiableMap(AddressLookupTable::address, Function.identity()));
-      final var accounts = skeleton.parseAccounts(lookupTables);
+      var accounts = skeleton.parseAccounts(lookupTables);
 
       instructions = skeleton.parseInstructions(skeleton.parseAccounts(lookupTables));
     } else {
@@ -61,42 +61,42 @@ try (final var httpClient = HttpClient.newHttpClient()) {
   // instructions[0]; // Compute Budget Limit
   // instructions[1]; // Compute Unit Price
   // instructions[2]; // Drift Place Orders
-  final var placeOrdersIxData = Arrays.stream(instructions)
+  var placeOrdersIxData = Arrays.stream(instructions)
       .filter(DriftProgram.PLACE_ORDERS_DISCRIMINATOR)
       .map(DriftProgram.PlaceOrdersIxData::read)
       .findFirst()
       .orElseThrow();
 
-  final OrderParams[] orderParams = placeOrdersIxData.params();
-  final OrderParams order = orderParams[0];
+  OrderParams[] orderParams = placeOrdersIxData.params();
+  OrderParams order = orderParams[0];
 
   // Fetch token contexts to make use of convenient scaled value conversions.
-  final var jupiterClient = JupiterClient.createClient(httpClient);
-  final var verifiedTokens = jupiterClient.verifiedTokenMap().join();
+  var jupiterClient = JupiterClient.createClient(httpClient);
+  var verifiedTokens = jupiterClient.verifiedTokenMap().join();
 
   // Create Drift Client to map market indexes from the order to its configuration.
-  final var nativeProgramClient = NativeProgramClient.createClient();
-  final var nativeProgramAccountClient = nativeProgramClient
+  var nativeProgramClient = NativeProgramClient.createClient();
+  var nativeProgramAccountClient = nativeProgramClient
       .createAccountClient(AccountMeta.createFeePayer(PublicKey.NONE));
-  final var driftClient = DriftProgramClient.createClient(nativeProgramAccountClient);
+  var driftClient = DriftProgramClient.createClient(nativeProgramAccountClient);
 
-  final var driftAccounts = driftClient.accounts();
-  final MarketConfig marketConfig;
-  final TokenContext baseTokenContext;
+  var driftAccounts = driftClient.accounts();
+  MarketConfig marketConfig;
+  TokenContext baseTokenContext;
   if (order.marketType() == MarketType.Perp) {
-    final var perpMarketConfig = driftAccounts.perpMarketConfig(order.marketIndex());
-    final var spotConfig = driftClient.spotMarket(perpMarketConfig.baseAssetSymbol());
+    var perpMarketConfig = driftAccounts.perpMarketConfig(order.marketIndex());
+    var spotConfig = driftClient.spotMarket(perpMarketConfig.baseAssetSymbol());
     baseTokenContext = verifiedTokens.get(spotConfig.mint());
     marketConfig = perpMarketConfig;
   } else {
-    final var spotConfig = driftAccounts.spotMarketConfig(order.marketIndex());
+    var spotConfig = driftAccounts.spotMarketConfig(order.marketIndex());
     baseTokenContext = verifiedTokens.get(spotConfig.mint());
     marketConfig = spotConfig;
   }
 
   // Assume all Drift markets are priced in USDC
-  final var usdcTokenMint = driftClient.spotMarket(DriftAsset.USDC).mint();
-  final var usdcTokenContext = verifiedTokens.get(usdcTokenMint);
+  var usdcTokenMint = driftClient.spotMarket(DriftAsset.USDC).mint();
+  var usdcTokenContext = verifiedTokens.get(usdcTokenMint);
 
   // Limit Long 0.1 @ 111 on SOL-PERP [reduceOnly=false] [postOnly=MustPostOnly]
   System.out.format("""

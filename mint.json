@@ -40,7 +40,8 @@
         "/libraries/core",
         "/libraries/rpc",
         "/libraries/programs",
-        "/libraries/anchor-programs"
+        "/libraries/anchor-programs",
+        "/libraries/web2"
       ]
     },
     {
