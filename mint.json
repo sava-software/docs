@@ -39,7 +39,8 @@
       "pages": [
         "/libraries/core",
         "/libraries/rpc",
-        "/libraries/programs"
+        "/libraries/programs",
+        "/libraries/anchor-src-gen"
       ]
     },
     {
