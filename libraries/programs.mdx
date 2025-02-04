@@ -106,15 +106,13 @@ try (var httpClient = HttpClient.newHttpClient()) {
 }
 ```
 
-## System Program
-
-### Durable Nonce Transactions
+## Durable Nonce Transactions
 
 <Info>
   See the [official Solana documentation](https://solana.com/developers/courses/offline-transactions/durable-nonces) for context on durable nonce transactions.
 </Info>
 
-#### Create & Initialize Nonce Account
+### Create & Initialize Nonce Account
 
 ```java
 Signer signer = ...
@@ -191,7 +189,7 @@ try (var httpClient = HttpClient.newHttpClient()) {
 }
 ```
 
-#### Create & Send Durable Nonce Transaction
+### Create & Send Durable Nonce Transaction
 
 ```java
 var signer = ...
