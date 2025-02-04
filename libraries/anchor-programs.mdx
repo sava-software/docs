@@ -28,7 +28,7 @@ try (var httpClient = HttpClient.newHttpClient()) {
 
   // Fetch a Drift placeOrders Transaction
   var txFuture = rpcClient.getTransaction(
-          "36Wnn99Y49mJ5GKiNiT3ja2q8gzSvMNrN5A3Bcn2YfCyrwY7kgQGVAu9VNzXqmWSbgzX76oUGxYNuPGM7tpPoJJS"
+      "36Wnn99Y49mJ5GKiNiT3ja2q8gzSvMNrN5A3Bcn2YfCyrwY7kgQGVAu9VNzXqmWSbgzX76oUGxYNuPGM7tpPoJJS"
   );
   var tx = txFuture.join();
   byte[] txData = tx.data();
@@ -37,7 +37,7 @@ try (var httpClient = HttpClient.newHttpClient()) {
 
   Instruction[] instructions;
   if (skeleton.isLegacy()) {
-    instructions = skeleton.parseInstructions(skeleton.parseAccounts());
+    instructions = skeleton.parseLegacyInstructions();
   } else {
     // Fetch Lookup tables to allow parsing of versioned transactions.
     int txVersion = skeleton.version();
@@ -52,7 +52,7 @@ try (var httpClient = HttpClient.newHttpClient()) {
           .collect(Collectors.toUnmodifiableMap(AddressLookupTable::address, Function.identity()));
       var accounts = skeleton.parseAccounts(lookupTables);
 
-      instructions = skeleton.parseInstructions(skeleton.parseAccounts(lookupTables));
+      instructions = skeleton.parseInstructions(accounts);
     } else {
       throw new IllegalStateException("Unhandled tx version " + txVersion);
     }

@@ -6,18 +6,115 @@ description: "Native Solana Program Utilities and Clients."
 <Card title="GitHub Repository" icon="github" horizontal={true} href="https://github.com/sava-software/solana-programs" />
 
 ## [Dependencies](https://github.com/sava-software/solana-programs/blob/main/src/main/java/module-info.java)
-  - [systems.comodal.json_iterator](https://github.com/comodal/json-iterator?tab=readme-ov-file#json-iterator)
   - java.net.http
+  - [systems.comodal.json_iterator](https://github.com/comodal/json-iterator?tab=readme-ov-file#json-iterator)
   - software.sava.core
   - software.sava.rpc
 
-## Durable Nonce Transactions
+## Program Clients
+
+Provides convenience methods for creating common instructions.
+
+### Typical Transaction Flow
+
+```java
+Signer signer = ;// load private key
+var feePayer = AccountMeta.createFeePayer(signer.publicKey());
+
+var programClient = NativeProgramClient.createClient();
+var programAccountClient = programClient.createAccountClient(feePayer);
+
+try (var httpClient = HttpClient.newHttpClient()) {
+  var rpcClient = SolanaRpcClient.createClient(
+      SolanaNetwork.MAIN_NET.getEndpoint(),
+      httpClient
+  );
+
+  // Create relevant instructions
+  List<Instruction> instructions = List.of();
+
+  var simulationTransaction = programAccountClient.createTransaction(
+      ComputeBudgetProgram.MAX_COMPUTE_BUDGET,
+      0,
+      instructions
+  );
+
+  // Apply a user provided fee or fetch an estimate from a service such as Helius' Fee API.
+  long microLamportComputeUnitPrice = 1234;
+
+  var simulationResult = rpcClient.simulateTransaction(simulationTransaction).join();
+
+  var transaction = programAccountClient.createTransaction(
+      simulationResult.unitsConsumed().getAsInt(),
+      microLamportComputeUnitPrice,
+      instructions
+  );
+  transaction.setRecentBlockHash(simulationResult.replacementBlockHash().blockhash());
+  transaction.sign(signer);
+
+  var base64Encoded = transaction.base64EncodeToString();
+  var sig = rpcClient.sendTransaction(base64Encoded).join();
+  System.out.println(sig);
+}
+```
+
+### Transfer SOL
+
+```java
+var transferFrom = PublicKey.fromBase58Encoded("");
+var feePayer = AccountMeta.createFeePayer(transferFrom);
+
+var programClient = NativeProgramClient.createClient();
+var programAccountClient = programClient.createAccountClient(feePayer);
+
+var transferTo = PublicKey.fromBase58Encoded("");
+var transferIx = programAccountClient.transferSolLamports(transferTo, 42);
+```
+
+### Create, Initialize & Delegate Stake Account
+
+```java
+long stakeLamports = LamportDecimal.fromBigDecimal(BigDecimal.ONE).longValue();
+var stakeAuthority = PublicKey.fromBase58Encoded("");
+var feePayer = AccountMeta.createFeePayer(stakeAuthority);
+var validatorVoteAccount = PublicKey.fromBase58Encoded("");
+
+var programClient = NativeProgramClient.createClient();
+var programAccountClient = programClient.createAccountClient(feePayer);
+
+try (var httpClient = HttpClient.newHttpClient()) {
+  var rpcClient = SolanaRpcClient.createClient(
+      SolanaNetwork.MAIN_NET.getEndpoint(),
+      httpClient
+  );
+  var minRent = NativeProgramClient.getMinimumBalanceForStakeAccount(rpcClient).join();
+
+  var seed = ZonedDateTime.now().toString();
+  var uninitializedStakeAccount = programAccountClient.createOffCurveStakeAccountWithSeed(seed);
+
+  var createStakeAccountIx = programAccountClient.createStakeAccountWithSeed(
+      uninitializedStakeAccount,
+      minRent
+  );
+
+  var stakeAccountPubKey = uninitializedStakeAccount.publicKey();
+  var initializeIx = programAccountClient.initializeStakeAccount(stakeAccountPubKey);
+  var transferIx = programAccountClient.transferSolLamports(stakeAccountPubKey, stakeLamports);
+  var delegateStakeIx = programAccountClient.delegateStakeAccount(stakeAccountPubKey, validatorVoteAccount);
+
+  var instructions = List.of(createStakeAccountIx, initializeIx, transferIx, delegateStakeIx);
+}
+```
+
+## System Program
+
+### Durable Nonce Transactions
 
 <Info>
   See the [official Solana documentation](https://solana.com/developers/courses/offline-transactions/durable-nonces) for context on durable nonce transactions.
 </Info>
 
-### Create & Initialize Nonce Account
+#### Create & Initialize Nonce Account
 
 ```java
 Signer signer = ...
@@ -94,7 +191,7 @@ try (var httpClient = HttpClient.newHttpClient()) {
 }
 ```
 
-### Create & Send Durable Nonce Transaction
+#### Create & Send Durable Nonce Transaction
 
 ```java
 var signer = ...
