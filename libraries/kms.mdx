@@ -63,7 +63,7 @@ byte[] sig = signingService.sign("Hello World".getBytes(StandardCharsets.UTF_8))
 
 ### Service Configuration
 
-Provide the signing service factory class desired and corresponding configuration. If it is network related
+Provide the signing service factory class desired and corresponding configuration. If it is a network related
 implementation, configure a backoff as well.
 
 ```json
@@ -144,7 +144,8 @@ Returns a base58 or base64 encoded public key for the service.
 
 Accepts base64 encoded data and returns a corresponding signature.
 
-If this not run in a trusted environment the server should be able to parse and inspect the data before signing.
+The server should be able to parse and inspect the data before signing, unless the requesting service can be completely
+trusted.
 
 * Request Headers:
   * X-ENCODING: base64
