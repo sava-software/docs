@@ -41,7 +41,8 @@
         "/libraries/rpc",
         "/libraries/programs",
         "/libraries/anchor-programs",
-        "/libraries/web2"
+        "/libraries/web2",
+        "/libraries/kms"
       ]
     },
     {

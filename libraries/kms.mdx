@@ -1,0 +1,137 @@
+---
+title: "KMS Clients"
+sidebarTitle: "KMS"
+description: "KMS clients for the purpose of isolating private key signing."
+mode: "wide"
+---
+
+<Card title="GitHub Repository" icon="github" horizontal={true} href="https://github.com/sava-software/kms" />
+
+## Service Usage
+
+Service code builds against a common SigningService interface, allowing for custom implementations to be provided
+via a SigningServiceFactory implementation.
+
+The purpose of this is to allow users of said service to create custom solutions for how they would like to sign transactions.
+
+### Load via Service Provider
+
+```java
+var jsonConfig = ""; // See examples below.
+
+var factoryClassName = "software.sava.kms.core.signing.MemorySignerFromFilePointerFactory";
+var serviceFactory = ServiceLoader.load(SigningServiceFactory.class).stream()
+    .filter(service -> service.type().name().equals(factoryClassName))
+    .findFirst().orElseThrow().get();
+
+var signingService = serviceFactory.createService(executor, JsonIterator.parse(json));
+
+var base58PublicKey = signingService.publicKey().join();
+
+byte[] sig = signingService.sign("Hello World".getBytes(StandardCharsets.UTF_8)).join();
+```
+
+## Consumer Usage
+
+Provide the SigningServiceFactory desired and corresponding configuration.
+
+### Local Disk
+
+Direct configuration of secret information.
+
+#### Factory Class
+
+[software.sava.kms.core.signing.MemorySignerFactory](https://github.com/sava-software/kms/blob/main/kms_core/src/main/java/software/sava/kms/core/signing/MemorySignerFactory.java)
+
+#### Configuration
+
+See [sava core private key parsing](/libraries/core#private-key-pair-parsing) for all supported encodings.
+
+```json
+{
+  "pubKey": "<PUB_KEY>",
+  "encoding": "base64KeyPair",
+  "secret": "<BASE64_ENCODED_PUBLIC_PRIVATE_KEY_PAIR>"
+}
+```
+
+### File Pointer
+
+Points to a file with the secret contents as shown above.
+
+#### Factory Class
+
+[software.sava.kms.core.signing.MemorySignerFromFilePointerFactory](https://github.com/sava-software/kms/blob/main/kms_core/src/main/java/software/sava/kms/core/signing/MemorySignerFromFilePointerFactory.java)
+
+#### Configuration
+
+```json
+{
+  "filePath": "/path/to/secret.json"
+}
+```
+
+### HTTP KMS
+
+Host an independent HTTP server that signs data.
+
+#### Factory Class
+
+[software.sava.kms.http.HttpKMSClientFactory](https://github.com/sava-software/kms/blob/main/http_kms/src/main/java/software/sava/kms/http/HttpKMSClientFactory.java)
+
+#### Headers:
+
+* X-ENCODING:
+    * base58
+    * base64
+
+#### Endpoints
+
+##### GET v0/publicKey
+
+* Response Headers:
+    * X-ENCODING: Defaults to base58.
+
+##### POST v0/sign
+
+* Request Headers:
+    * X-ENCODING: base64
+
+#### Configuration
+
+```json
+{
+  "endpoint": "https://api.signing.service/",
+  "capacity": {
+    "minCapacityDuration": "PT8S",
+    "maxCapacity": 300,
+    "resetDuration": "PT6S"
+  }
+}
+```
+
+### Google KMS
+
+Use [Google Cloud Key Management Service](https://cloud.google.com/kms/docs/) to sign data.
+Unfortunately they do not provide HSMs, and also their libraries have a large amount dependencies.
+
+#### Factory Class
+
+[GoogleKMSClientFactory](https://github.com/sava-software/kms/blob/main/google_kms/src/main/java/software/sava/kms/google/GoogleKMSClientFactory.java#L16)
+
+#### Configuration
+
+```json
+{
+  "project": "google-project-name",
+  "location": "global",
+  "keyRing": "dev-keyring",
+  "cryptoKey": "dev_key",
+  "cryptoKeyVersion": "1",
+  "capacity": {
+    "minCapacityDuration": "PT8S",
+    "maxCapacity": 300,
+    "resetDuration": "PT6S"
+  }
+}
+```
