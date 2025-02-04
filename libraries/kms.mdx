@@ -88,10 +88,16 @@ Host an independent HTTP server that signs data.
 
 ##### GET v0/publicKey
 
+Returns a base58 or base64 encoded public key for the service.
+
 * Response Headers:
-    * X-ENCODING: Defaults to base58.
+    * X-ENCODING: [base58 | base64]
 
 ##### POST v0/sign
+
+Accepts base64 encoded data and returns a corresponding signature.
+
+If this not run in a trusted environment the server should be able to parse and inspect the data before signing.
 
 * Request Headers:
     * X-ENCODING: base64

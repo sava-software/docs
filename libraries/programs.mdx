@@ -18,7 +18,7 @@ Provides convenience methods for creating common instructions.
 ### Typical Transaction Flow
 
 ```java
-Signer signer = ;// load private key
+Signer signer = ...; // load private key
 var feePayer = AccountMeta.createFeePayer(signer.publicKey());
 
 var programClient = NativeProgramClient.createClient();
