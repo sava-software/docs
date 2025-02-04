@@ -67,7 +67,6 @@ Solana services and components.
 - software.sava.anchor_programs
 - software.sava.ravina_core
 - software.sava.kms_core
-- software.sava.kms_core
 
 ### [Epoch Info Service](https://github.com/sava-software/ravina/blob/main/solana/src/main/java/software/sava/services/solana/epoch/EpochInfoService.java)
 
@@ -106,7 +105,7 @@ which provides the following features:
 
 Used to manage the connection of a SolanaRpcWebsocket. Call `checkConnection` to drive re-connections. If errors are
 observed, the corresponding delay from the
-provided [Backoff](https://github.com/sava-software/ravina/blob/main/core/README.md#backoff) will be respected.
+provided [Backoff](/libraries/ravina#backoff) will be respected.
 
 #### Pseudo Usage
 
@@ -122,13 +121,9 @@ var webSocketManager = WebSocketManager.createManager(
     webSocket -> webSocket.accountSubscribe(account, System.out::println)
 );
 
-for(;;){
-    webSocketManager.
-
-checkConnection();
-  Thread.
-
-sleep(1_000);
+while (true) {
+    webSocketManager.checkConnection();
+    Thread.sleep(1_000);
 }
 ```
 
