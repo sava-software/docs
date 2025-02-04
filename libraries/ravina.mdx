@@ -1,0 +1,180 @@
+---
+title: "Ravina"
+description: "Components to ease the development of both generic and Solana based services."
+---
+
+<Card title="GitHub Repository" icon="github" horizontal={true} href="https://github.com/sava-software/ravina" />
+
+## Core
+
+Components for building durable networked services.
+
+### [Dependencies](https://github.com/sava-software/ravina/blob/main/core/src/main/java/module-info.java)
+
+- java.net.http
+- [systems.comodal.json_iterator](https://github.com/comodal/json-iterator?tab=readme-ov-file#json-iterator)
+
+### Configuration Primitives
+
+#### Time
+
+Durations/windows/delays are [ISO-8601 duration](https://en.wikipedia.org/wiki/ISO_8601#Durations) formatted
+`PnDTnHnMn.nS`. The `PT` prefix may be omitted.
+
+### Components
+
+#### [Request Capacity Monitor](https://github.com/sava-software/services/blob/main/core/src/main/java/software/sava/services/core/request_capacity/ErrorTrackedCapacityMonitor.java)
+
+Tracks request capacity available to a resource. Works in conjunction with [Calls](#Call) to potentially wait until
+capacity is available before making a request to avoid rate-limiting issues. Capacity is reduced in a weighted fashion
+per call, and also potentially when response errors are observed.
+
+##### [Configuration](https://github.com/sava-software/services/blob/main/core/src/main/java/software/sava/services/core/request_capacity/CapacityConfig.java)
+
+* `maxCapacity`: Maximum requests that can be made within `resetDuration`
+* `resetDuration`: `maxCapacity` is added over the course of this duration.
+* `minCapacityDuration`: Maximum time before capacity should recover to a positive value, given that no additional
+  failures happen.
+* `maxGroupedErrorResponses`:
+* `maxGroupedErrorExpiration`:
+* `tooManyErrorsBackoffDuration`:
+* `serverErrorBackOffDuration`: Reduce capacity if remove server errors are observed.
+* `rateLimitedBackOffDuration`: Reduce capacity if rate limit errors are observed.
+
+#### [Backoff](https://github.com/sava-software/services/blob/main/core/src/main/java/software/sava/services/core/remote/call/Backoff.java)
+
+Backoff strategy in response to I/O errors.
+
+##### [Configuration](https://github.com/sava-software/services/blob/main/core/src/main/java/software/sava/services/core/remote/call/BackoffConfig.java)
+
+* `type`: single, linear, fibonacci, exponential
+* `initialRetryDelay`
+* `maxRetryDelay`
+
+## Solana
+
+Solana services and components.
+
+### [Dependencies](https://github.com/sava-software/ravina/blob/main/solana/src/main/java/module-info.java)
+
+- java.net.http
+- [systems.comodal.json_iterator](https://github.com/comodal/json-iterator?tab=readme-ov-file#json-iterator)
+- [org.bouncycastle.provider](https://www.bouncycastle.org/download/bouncy-castle-java/#latest)
+- software.sava.core
+- software.sava.rpc
+- software.sava.solana_programs
+- software.sava.anchor_src_gen
+- software.sava.anchor_programs
+- software.sava.ravina_core
+- software.sava.kms_core
+- software.sava.kms_core
+
+### [Epoch Info Service](https://github.com/sava-software/ravina/blob/main/solana/src/main/java/software/sava/services/solana/epoch/EpochInfoService.java)
+
+Periodically polls for slot performance stats and epoch information to create
+an [Epoch data record](https://github.com/sava-software/ravina/blob/main/solana/src/main/java/software/sava/services/solana/epoch/Epoch.java)
+which provides the following features:
+
+- Duration remaining for a given time unit.
+- Percent complete.
+- Epochs per year.
+- The current slot index.
+- The current block height accounting for a skip rate.
+- [SlotPerformanceStats](https://github.com/sava-software/ravina/blob/main/solana/src/main/java/software/sava/services/solana/epoch/SlotPerformanceStats.java)
+
+#### [Configuration](https://github.com/sava-software/ravina/blob/main/solana/src/main/java/software/sava/services/solana/epoch/EpochServiceConfig.java)
+
+- **defaultMillisPerSlot**: Used if performance samples are not available.
+- **minMillisPerSlot**: Performance samples will be capped to greater than or equal to this value.
+- **maxMillisPerSlot**: Performance samples will be capped to less than or equal to this value.
+- **slotSampleWindow**: The recent time window to draw performance samples.
+- **fetchSlotSamplesDelay**: Poll new performance samples and epoch information delay.
+- **fetchEpochInfoAfterEndDelay**: Also fetch new performance samples and epoch information after each epoch rollover.
+
+```json
+{
+  "defaultMillisPerSlot": 405,
+  "minMillisPerSlot": 400,
+  "maxMillisPerSlot": 500,
+  "slotSampleWindow": "13M",
+  "fetchSlotSamplesDelay": "8M",
+  "fetchEpochInfoAfterEndDelay": "0.5S"
+}
+```
+
+### [Web Socket Manager](https://github.com/sava-software/ravina/blob/main/solana/src/main/java/software/sava/services/solana/websocket/WebSocketManager.java)
+
+Used to manage the connection of a SolanaRpcWebsocket. Call `checkConnection` to drive re-connections. If errors are
+observed, the corresponding delay from the
+provided [Backoff](https://github.com/sava-software/ravina/blob/main/core/README.md#backoff) will be respected.
+
+#### Pseudo Usage
+
+```java
+var backoff = Backoff.exponential(1, 32);
+var account = PublicKey.fromBase58Encoded("");
+
+var httpClient = HttpClient.newHttpClient();
+var webSocketManager = WebSocketManager.createManager(
+    httpClient,
+    URI.create("wss://url"),
+    backoff,
+    webSocket -> webSocket.accountSubscribe(account, System.out::println)
+);
+
+for(;;){
+    webSocketManager.
+
+checkConnection();
+  Thread.
+
+sleep(1_000);
+}
+```
+
+### [Chain Item Formatter](https://github.com/sava-software/services/blob/main/solana/src/main/java/software/sava/services/solana/config/ChainItemFormatter.java)
+
+Used to provide more convenient logging of accounts and transaction hashes.
+
+#### Defaults & JSON Configuration
+
+```json
+{
+  "sig": "https://solscan.io/tx/%s",
+  "address": "https://solscan.io/account/%s"
+}
+```
+
+### [WebHook Client](https://github.com/sava-software/services/blob/main/solana/src/main/java/software/sava/services/net/http/WebHookClient.java)
+
+Generic client to POST JSON messages.
+
+#### [Configuration](https://github.com/sava-software/services/blob/main/solana/src/main/java/software/sava/services/net/http/WebHookConfig.java)
+
+```json
+[
+  {
+    "endpoint": "https://hooks.slack.com/services/...",
+    "provider": "SLACK",
+    "capacity": {
+      "maxCapacity": 2,
+      "resetDuration": "1S",
+      "minCapacityDuration": "8S"
+    }
+  }
+]
+```
+
+```json
+[
+  {
+    "endpoint": "https://hooks.slack.com/services/...",
+    "bodyFormat": "{\"text\":\"%s\"}",
+    "capacity": {
+      "maxCapacity": 2,
+      "resetDuration": "1S",
+      "minCapacityDuration": "8S"
+    }
+  }
+]
+```

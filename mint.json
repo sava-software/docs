@@ -42,7 +42,8 @@
         "/libraries/programs",
         "/libraries/anchor-programs",
         "/libraries/web2",
-        "/libraries/kms"
+        "/libraries/kms",
+        "/libraries/ravina"
       ]
     },
     {
