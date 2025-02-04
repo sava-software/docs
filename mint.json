@@ -53,7 +53,10 @@
         "/utilities/vanity"
       ]
     },
-    "/about"
+    {
+      "group": "About",
+      "pages": ["/about"]
+    }
   ],
   "metadata": {
     "og:site_name": "Solana Java SDK",
