@@ -52,7 +52,8 @@
         "/utilities/anchor-src-gen",
         "/utilities/vanity"
       ]
-    }
+    },
+    "/about"
   ],
   "metadata": {
     "og:site_name": "Solana Java SDK",
