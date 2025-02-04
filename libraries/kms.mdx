@@ -6,43 +6,91 @@ description: "KMS clients for the purpose of isolating ed25519 private key signi
 
 <Card title="GitHub Repository" icon="github" horizontal={true} href="https://github.com/sava-software/kms" />
 
-## Service Usage
+## KMS Core
+
+### [Dependencies](https://github.com/sava-software/kms/blob/main/kms_core/src/main/java/module-info.java)
+
+- [systems.comodal.json_iterator](https://github.com/comodal/json-iterator?tab=readme-ov-file#json-iterator)
+- software.sava.core
+- software.sava.rpc
+- software.sava.ravina_core
+
+### Service Usage
 
 Service code builds against a common SigningService interface, allowing for custom implementations to be provided
 via a SigningServiceFactory.
 
-The purpose of this is to allow users of said service to create custom solutions for how they would like to sign transactions.
+The purpose of this is to allow users of said service to create custom solutions for how they would like to sign
+transactions.
 
-### Load via Service Provider
+#### Load via Service Provider
+
+Load from service config.
 
 ```java
 var jsonConfig = ""; // See examples below.
+var ji = JsonIterator.parse(json);
 
-var factoryClassName = "software.sava.kms.core.signing.MemorySignerFromFilePointerFactory";
-var serviceFactory = ServiceLoader.load(SigningServiceFactory.class).stream()
-    .filter(service -> service.type().name().equals(factoryClassName))
-    .findFirst().orElseThrow().get();
+var executorService = Executors.newVirtualThreadPerTaskExecutor();
+var defaultBackoff = Backoff.exponential(1, 16);
+var signingServiceConfig = SigningServiceConfig.parseConfig(executorService, defaultBackoff, ji);
 
-var signingService = serviceFactory.createService(executor, JsonIterator.parse(json));
+var signingService = signingServiceConfig.signingService();
 
 var base58PublicKey = signingService.publicKey().join();
 
 byte[] sig = signingService.sign("Hello World".getBytes(StandardCharsets.UTF_8)).join();
 ```
 
-## Consumer Usage
+Load from implementation config.
 
-Provide the SigningServiceFactory desired and corresponding configuration.
+```java
+var jsonConfig = ""; // See examples below.
+var ji = JsonIterator.parse(json);
 
-### Local Disk
+var factoryClassName = "software.sava.kms.core.signing.MemorySignerFromFilePointerFactory";
+var serviceFactory = ServiceLoader.load(SigningServiceFactory.class).stream()
+    .filter(service -> service.type().name().equals(factoryClassName))
+    .findFirst().orElseThrow().get();
+
+var executorService = Executors.newVirtualThreadPerTaskExecutor();
+var signingService = serviceFactory.createService(executorService, ji);
+
+var base58PublicKey = signingService.publicKey().join();
+
+byte[] sig = signingService.sign("Hello World".getBytes(StandardCharsets.UTF_8)).join();
+```
+
+### Service Configuration
+
+Provide the signing service factory class desired and corresponding configuration. If it is network related
+implementation, configure a backoff as well.
+
+```json
+{
+  "factoryClass": "software.sava.kms.core.signing.MemorySignerFromFilePointerFactory",
+  "config": {
+    "filePath": "/path/to/secret.json"
+  },
+  "backoff": {
+    "type": "fibonacci",
+    "initialRetryDelay": "1S",
+    "maxRetryDelay": "21S"
+  }
+}
+```
+
+### Implementations
+
+#### Local Disk
 
 Local configuration of secret information.
 
-#### Factory Class
+##### Factory Class
 
 [software.sava.kms.core.signing.MemorySignerFactory](https://github.com/sava-software/kms/blob/main/kms_core/src/main/java/software/sava/kms/core/signing/MemorySignerFactory.java)
 
-#### Configuration
+##### Configuration
 
 See [sava core private key parsing](/libraries/core#private-key-parsing) for all supported encodings.
 
@@ -54,15 +102,15 @@ See [sava core private key parsing](/libraries/core#private-key-parsing) for all
 }
 ```
 
-### File Pointer
+#### File Pointer
 
 Points to a file with the secret contents as shown above.
 
-#### Factory Class
+##### Factory Class
 
 [software.sava.kms.core.signing.MemorySignerFromFilePointerFactory](https://github.com/sava-software/kms/blob/main/kms_core/src/main/java/software/sava/kms/core/signing/MemorySignerFromFilePointerFactory.java)
 
-#### Configuration
+##### Configuration
 
 ```json
 {
@@ -70,39 +118,42 @@ Points to a file with the secret contents as shown above.
 }
 ```
 
-### HTTP KMS
+## HTTP KMS
 
 Host an independent HTTP server that signs data.
 
-#### Factory Class
+### [Dependencies](https://github.com/sava-software/kms/blob/main/http_kms/src/main/java/module-info.java)
 
-[software.sava.kms.http.HttpKMSClientFactory](https://github.com/sava-software/kms/blob/main/http_kms/src/main/java/software/sava/kms/http/HttpKMSClientFactory.java)
+- java.net.http
+- [systems.comodal.json_iterator](https://github.com/comodal/json-iterator?tab=readme-ov-file#json-iterator)
+- software.sava.core
+- software.sava.rpc
+- software.sava.ravina_core
+- software.sava.kms_core
 
-#### Headers:
+### Endpoints
 
-* X-ENCODING:
-    * base58
-    * base64
-
-#### Endpoints
-
-##### GET v0/publicKey
+#### GET v0/publicKey
 
 Returns a base58 or base64 encoded public key for the service.
 
 * Response Headers:
-    * X-ENCODING: [base58 | base64]
+  * X-ENCODING: [base58 | base64]
 
-##### POST v0/sign
+#### POST v0/sign
 
 Accepts base64 encoded data and returns a corresponding signature.
 
 If this not run in a trusted environment the server should be able to parse and inspect the data before signing.
 
 * Request Headers:
-    * X-ENCODING: base64
+  * X-ENCODING: base64
 
-#### Configuration
+### Factory Class
+
+[software.sava.kms.http.HttpKMSClientFactory](https://github.com/sava-software/kms/blob/main/http_kms/src/main/java/software/sava/kms/http/HttpKMSClientFactory.java)
+
+### User Configuration
 
 ```json
 {
@@ -115,15 +166,28 @@ If this not run in a trusted environment the server should be able to parse and 
 }
 ```
 
-### Google KMS
+## Google KMS
 
 Use [Google Cloud Key Management Service](https://cloud.google.com/kms/docs/) to sign data.
 
-#### Factory Class
+<Info>
+    Google's dependency tree exports the same package from multiple jars.  This prevents the ability to use this library on the module path.
+</Info>
+
+### Dependencies
+
+- [systems.comodal.json_iterator](https://github.com/comodal/json-iterator?tab=readme-ov-file#json-iterator)
+- software.sava.core
+- software.sava.rpc
+- software.sava.ravina_core
+- software.sava.kms_core
+- [google.cloud.kms](https://mvnrepository.com/artifact/com.google.cloud/google-cloud-kms)
+
+### Factory Class
 
 [GoogleKMSClientFactory](https://github.com/sava-software/kms/blob/main/google_kms/src/main/java/software/sava/kms/google/GoogleKMSClientFactory.java)
 
-#### Configuration
+### Configuration
 
 ```json
 {
