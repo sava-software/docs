@@ -55,7 +55,7 @@
     },
     {
       "group": "About",
-      "pages": ["/about"]
+      "pages": ["/about", "/showcase"]
     }
   ],
   "metadata": {
