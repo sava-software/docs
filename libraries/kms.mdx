@@ -20,8 +20,8 @@ description: "KMS clients for the purpose of isolating ed25519 private key signi
 Service code builds against a common SigningService interface, allowing for custom implementations to be provided
 via a SigningServiceFactory.
 
-The purpose of this is to allow users of said service to create custom solutions for how they would like to sign
-transactions.
+The purpose of this is to allow users of said service to dynamically load custom solutions for how they would like to
+sign transactions.
 
 #### Load via Service Provider
 
