@@ -56,8 +56,8 @@
     {
       "group": "About",
       "pages": [
-        "/about",
-        "/spotlight"
+        "/about/project",
+        "/about/spotlight"
       ]
     }
   ],
