@@ -52,6 +52,13 @@
         "/utilities/anchor-src-gen",
         "/utilities/vanity"
       ]
+    },
+    {
+      "group": "About",
+      "pages": [
+        "/about/project",
+        "/about/spotlight"
+      ]
     }
   ],
   "metadata": {
