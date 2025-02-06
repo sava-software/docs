@@ -7,7 +7,8 @@ description: "Components to ease the development of both generic and Solana base
 
 ## Core
 
-Components for building durable networked services.
+Components for building durable networked services. Configuration parsers are provided for each component for the
+purpose of allowing users to configure the service.
 
 ### [Dependencies](https://github.com/sava-software/ravina/blob/main/core/src/main/java/module-info.java)
 
@@ -21,35 +22,160 @@ Components for building durable networked services.
 Durations/windows/delays are [ISO-8601 duration](https://en.wikipedia.org/wiki/ISO_8601#Durations) formatted
 `PnDTnHnMn.nS`. The `PT` prefix may be omitted.
 
-### Components
-
-#### [Request Capacity Monitor](https://github.com/sava-software/services/blob/main/core/src/main/java/software/sava/services/core/request_capacity/ErrorTrackedCapacityMonitor.java)
-
-Tracks request capacity available to a resource. Works in conjunction with [Calls](#Call) to potentially wait until
-capacity is available before making a request to avoid rate-limiting issues. Capacity is reduced in a weighted fashion
-per call, and also potentially when response errors are observed.
-
-##### [Configuration](https://github.com/sava-software/services/blob/main/core/src/main/java/software/sava/services/core/request_capacity/CapacityConfig.java)
-
-* `maxCapacity`: Maximum requests that can be made within `resetDuration`
-* `resetDuration`: `maxCapacity` is added over the course of this duration.
-* `minCapacityDuration`: Maximum time before capacity should recover to a positive value, given that no additional
-  failures happen.
-* `maxGroupedErrorResponses`:
-* `maxGroupedErrorExpiration`:
-* `tooManyErrorsBackoffDuration`:
-* `serverErrorBackOffDuration`: Reduce capacity if remove server errors are observed.
-* `rateLimitedBackOffDuration`: Reduce capacity if rate limit errors are observed.
-
-#### [Backoff](https://github.com/sava-software/services/blob/main/core/src/main/java/software/sava/services/core/remote/call/Backoff.java)
+### [Backoff](https://github.com/sava-software/services/blob/main/core/src/main/java/software/sava/services/core/remote/call/Backoff.java)
 
 Backoff strategy in response to I/O errors.
 
-##### [Configuration](https://github.com/sava-software/services/blob/main/core/src/main/java/software/sava/services/core/remote/call/BackoffConfig.java)
+#### [Configuration](https://github.com/sava-software/services/blob/main/core/src/main/java/software/sava/services/core/remote/call/BackoffConfig.java)
 
-* `type`: single, linear, fibonacci, exponential
-* `initialRetryDelay`
-* `maxRetryDelay`
+* **type**: single, linear, fibonacci, exponential
+* **initialRetryDelay**
+* **maxRetryDelay**
+
+#### Usage
+
+```java
+var jsonConfig = "";
+var ji = JsonIterator.parse(jsonConfig);
+var backoffConfig = BackoffConfig.parseConfig(ji);
+var backoff = backoffConfig == null
+    ? Backoff.fibonacci(1, 13)
+    : backoffConfig.createBackoff();
+
+for (long errorCount = 0; ; ) {
+  try {
+    // some I/O task.
+    break;
+  } catch (Exception e) {
+    System.err.format("Failed to do something %d time(s)%n", ++errorCount);
+    final long sleep = backoff.delay(errorCount, TimeUnit.MILLISECONDS);
+    Thread.sleep(sleep);
+  }
+}
+```
+
+### Request Capacity Monitor
+
+Tracks request capacity available to a resource. Intended to be used with [Calls](#remote-call) to potentially wait until
+capacity is available before making a request to avoid rate-limiting issues. Capacity is reduced in a weighted fashion
+per call, and also potentially when response errors are observed.
+
+#### [Configuration](https://github.com/sava-software/services/blob/main/core/src/main/java/software/sava/services/core/request_capacity/CapacityConfig.java)
+
+* **maxCapacity**: Maximum requests that can be made within **resetDuration**
+* **resetDuration**: **maxCapacity** is added over the course of this duration.
+* **minCapacityDuration**: Maximum time before capacity should recover to zero, given that no additional
+  failures happen.
+* **maxGroupedErrorResponses**:
+* **maxGroupedErrorExpiration**:
+* **tooManyErrorsBackoffDuration**:
+* **serverErrorBackOffDuration**: Reduce capacity if remove server errors are observed.
+* **rateLimitedBackOffDuration**: Reduce capacity if rate limit errors are observed.
+
+#### Construction
+
+```java
+var jsonConfig = "";
+var ji = JsonIterator.parse(jsonConfig);
+var capacityConfig = CapacityConfig.parse(ji);
+if (capacityConfig == null) {
+  // 10 requests per second with a maximum complete backoff of 5 seconds.
+  capacityConfig = CapacityConfig.createSimpleConfig(
+      Duration.ofSeconds(5), // minCapacityDuration
+      10, // maxCapacity
+      Duration.ofSeconds(1) // resetDuration
+  );
+}
+
+// Custom error tracker's may be implemented to handle responses other than HttpResponse<byte[]>.
+ErrorTrackedCapacityMonitor<HttpResponse<byte[]>> capacityMonitor = capacityConfig
+    .createHttpResponseMonitor("service_name");
+```
+
+### [LoadBalancer](https://github.com/sava-software/services/blob/main/core/src/main/java/software/sava/services/core/remote/load_balance/LoadBalancer.java)
+
+Somewhat opinionated generic load balancers intended to be used with [Calls](#remote-call).
+
+#### Sorted
+
+Sorts by error count and then sample call time.
+
+#### Error Count Backoff
+
+Skips items proportional to how many errors it has.  How many times an item is skipped is tracked so that it can move back up the queue to be re-tried.
+
+#### Single
+
+Wrapper around a single item.
+
+#### [Configuration](https://github.com/sava-software/ravina/blob/main/core/src/main/java/software/sava/services/core/remote/load_balance/LoadBalancerConfig.java)
+
+* **defaultCapacity**
+* **defaultBackoff**
+* **endpoints**: Array of remote resources.
+  * **url**
+  * **capacity**: Overrides **defaultCapacity**
+  * **backoff**: Overrides **defaultBackoff**
+
+#### Construction
+
+```java
+var jsonConfig = "";
+var ji = JsonIterator.parse(jsonConfig);
+var loadBalancerConfig = LoadBalancerConfig.parse(ji);
+
+var items = loadBalancerConfig.createItems((endpoint, capacityMonitor, backoff) -> {
+  final var client = null; // Construct the client to your remote resource.
+  return BalancedItem.createItem(client, capacityMonitor, backoff);
+});
+var loadBalancer = LoadBalancer.createSortedBalancer(items);
+```
+
+### [Remote Call](https://github.com/sava-software/services/blob/main/core/src/main/java/software/sava/services/core/remote/call/Call.java)
+
+Facilitates retrying remote calls, using [backoff](#backoff) strategies to delay between failures.
+
+If the backoff strategy returns a negative number or the error count exceeds the max retries for the call context,
+the exception is re-thrown wrapped in a RuntimeException.
+
+#### Composed
+
+Simple retry logic, does not track any corresponding request capacity for the given resource.
+
+#### Greedy
+
+Records the consumption of request capacity, but does not wait until available.
+
+#### Courteous
+
+Waits until the resource has enough capacity, up until `maxTryClaim` attempts, 
+after which it will either give up and return null or force the call.
+
+#### Usage 
+
+```java
+ErrorTrackedCapacityMonitor<HttpResponse<byte[]>> capacityMonitor = null;
+var capacityState = capacityMonitor.capacityState();
+var backoff = Backoff.exponential(1, 16);
+var callContext = CallContext.createContext(
+    2,// callWeight
+    1 // minCapacity
+);
+var httpRequest = HttpRequest.newBuilder(URI.create("https://api.domain.me/endpoint")).GET().build();
+
+try (var executor = Executors.newVirtualThreadPerTaskExecutor();
+     var httpClient = HttpClient.newHttpClient()) {
+  var callFuture = Call.createCourteousCall(
+      () -> httpClient.sendAsync(httpRequest, HttpResponse.BodyHandlers.ofString()),
+      capacityState,
+      callContext,
+      backoff,
+      "retry log context"
+  ).async(executor);
+
+  var result = callFuture.join();
+}
+```
 
 ## Solana
 
@@ -121,7 +247,7 @@ var webSocketManager = WebSocketManager.createManager(
     webSocket -> webSocket.accountSubscribe(account, System.out::println)
 );
 
-while (true) {
+for (;;) {
     webSocketManager.checkConnection();
     Thread.sleep(1_000);
 }
