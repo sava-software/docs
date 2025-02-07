@@ -5,6 +5,13 @@ description: "Components to ease the development of both generic and Solana base
 
 <Card title="GitHub Repository" icon="github" horizontal={true} href="https://github.com/sava-software/ravina" />
 
+## Configuration Primitives
+
+### Time
+
+Durations/windows/delays are [ISO-8601 duration](https://en.wikipedia.org/wiki/ISO_8601#Durations) formatted
+`PnDTnHnMn.nS`. The `PT` prefix may be omitted.
+
 ## Core
 
 Components for building durable networked services. Configuration parsers are provided for each component for the
@@ -14,13 +21,6 @@ purpose of allowing users to configure the service.
 
 - java.net.http
 - [systems.comodal.json_iterator](https://github.com/comodal/json-iterator?tab=readme-ov-file#json-iterator)
-
-### Configuration Primitives
-
-#### Time
-
-Durations/windows/delays are [ISO-8601 duration](https://en.wikipedia.org/wiki/ISO_8601#Durations) formatted
-`PnDTnHnMn.nS`. The `PT` prefix may be omitted.
 
 ### [Backoff](https://github.com/sava-software/services/blob/main/core/src/main/java/software/sava/services/core/remote/call/Backoff.java)
 

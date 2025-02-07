@@ -19,10 +19,7 @@ Implements the [priority fee API](https://docs.helius.dev/solana-apis/priority-f
 
 ```java
 try (var httpClient = HttpClient.newHttpClient()) {
-  var heliusClient = HeliusClient.createHttpClient(
-    URI.create("https://mainnet.helius-rpc.com/?api-key="),
-    httpClient
-  );
+  var heliusClient = HeliusClient.createHttpClient(URI.create("https://mainnet.helius-rpc.com/?api-key="), httpClient);
 }
 ```
 
