@@ -37,7 +37,7 @@ var signingServiceConfig = SigningServiceConfig.parseConfig(executorService, def
 
 var signingService = signingServiceConfig.signingService();
 
-var base58PublicKey = signingService.publicKey().join();
+var servicePublicKey = signingService.publicKey().join();
 
 byte[] sig = signingService.sign("Hello World".getBytes(StandardCharsets.UTF_8)).join();
 ```
@@ -56,7 +56,7 @@ var serviceFactory = ServiceLoader.load(SigningServiceFactory.class).stream()
 var executorService = Executors.newVirtualThreadPerTaskExecutor();
 var signingService = serviceFactory.createService(executorService, ji);
 
-var base58PublicKey = signingService.publicKey().join();
+var servicePublicKey = signingService.publicKey().join();
 
 byte[] sig = signingService.sign("Hello World".getBytes(StandardCharsets.UTF_8)).join();
 ```
