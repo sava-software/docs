@@ -39,7 +39,7 @@ var signingService = signingServiceConfig.signingService();
 
 var servicePublicKey = signingService.publicKey().join();
 
-byte[] sig = signingService.sign("Hello World".getBytes(StandardCharsets.UTF_8)).join();
+byte[] sig = signingService.sign("Hello World".getBytes()).join();
 ```
 
 Load from implementation config.
@@ -58,7 +58,7 @@ var signingService = serviceFactory.createService(executorService, ji);
 
 var servicePublicKey = signingService.publicKey().join();
 
-byte[] sig = signingService.sign("Hello World".getBytes(StandardCharsets.UTF_8)).join();
+byte[] sig = signingService.sign("Hello World".getBytes()).join();
 ```
 
 ### Service Configuration
