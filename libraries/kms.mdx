@@ -29,7 +29,7 @@ Load from service config.
 
 ```java
 var jsonConfig = ""; // See examples below.
-var ji = JsonIterator.parse(json);
+var ji = JsonIterator.parse(jsonConfig);
 
 var executorService = Executors.newVirtualThreadPerTaskExecutor();
 var defaultBackoff = Backoff.exponential(1, 16);
@@ -42,19 +42,14 @@ var servicePublicKey = signingService.publicKey().join();
 byte[] sig = signingService.sign("Hello World".getBytes()).join();
 ```
 
-Load from implementation config.
+Load from concrete implementation config.
 
 ```java
 var jsonConfig = ""; // See examples below.
-var ji = JsonIterator.parse(json);
+var ji = JsonIterator.parse(jsonConfig);
 
-var factoryClassName = "software.sava.kms.core.signing.MemorySignerFromFilePointerFactory";
-var serviceFactory = ServiceLoader.load(SigningServiceFactory.class).stream()
-    .filter(service -> service.type().name().equals(factoryClassName))
-    .findFirst().orElseThrow().get();
-
-var executorService = Executors.newVirtualThreadPerTaskExecutor();
-var signingService = serviceFactory.createService(executorService, ji);
+var serviceFactory = new MemorySignerFromFilePointerFactory();
+var signingService = serviceFactory.createService(ji);
 
 var servicePublicKey = signingService.publicKey().join();
 
