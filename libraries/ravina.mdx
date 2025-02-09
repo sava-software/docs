@@ -35,7 +35,7 @@ Backoff strategy in response to I/O errors.
 #### Usage
 
 ```java
-var jsonConfig = "";
+var jsonConfig = "null";
 var ji = JsonIterator.parse(jsonConfig);
 var backoffConfig = BackoffConfig.parseConfig(ji);
 var backoff = backoffConfig == null
@@ -56,7 +56,8 @@ for (long errorCount = 0; ; ) {
 
 ### Request Capacity Monitor
 
-Tracks request capacity available to a resource. Intended to be used with [Calls](#remote-call) to potentially wait until
+Tracks request capacity available to a resource. Intended to be used with [Calls](#remote-call) to potentially wait
+until
 capacity is available before making a request to avoid rate-limiting issues. Capacity is reduced in a weighted fashion
 per call, and also potentially when response errors are observed.
 
@@ -75,7 +76,7 @@ per call, and also potentially when response errors are observed.
 #### Construction
 
 ```java
-var jsonConfig = "";
+var jsonConfig = "null";
 var ji = JsonIterator.parse(jsonConfig);
 var capacityConfig = CapacityConfig.parse(ji);
 if (capacityConfig == null) {
@@ -96,13 +97,15 @@ ErrorTrackedCapacityMonitor<HttpResponse<byte[]>> capacityMonitor = capacityConf
 
 Somewhat opinionated generic load balancers intended to be used with [Calls](#remote-call).
 
-#### Sorted
-
-Sorts by error count and then sample call time.
-
 #### Error Count Backoff
 
-Skips items proportional to how many errors it has.  How many times an item is skipped is tracked so that it can move back up the queue to be re-tried.
+Skips items proportional to how many errors it has. How many times an item is skipped is tracked so that it can move
+back up the queue to be re-tried.
+
+#### Sorted
+
+Sorts by error count and then sample call time. Must be driven with requests using `nextNoSkip` to sample request
+performance.
 
 #### Single
 
@@ -148,10 +151,10 @@ Records the consumption of request capacity, but does not wait until available.
 
 #### Courteous
 
-Waits until the resource has enough capacity, up until `maxTryClaim` attempts, 
+Waits until the resource has enough capacity, up until `maxTryClaim` attempts,
 after which it will either give up and return null or force the call.
 
-#### Usage 
+#### Remote Call Usage
 
 ```java
 ErrorTrackedCapacityMonitor<HttpResponse<byte[]>> capacityMonitor = null;
@@ -194,6 +197,25 @@ Solana services and components.
 - software.sava.ravina_core
 - software.sava.kms_core
 
+### RPC Caller
+
+Ties together a load balancer, rpc call weights and an executor service to make using remote calls more convenient.
+
+#### RPC Caller Construction
+
+```java
+LoadBalancer<SolanaRpcClient> loadBalancer = ...;
+var callWeights = CallWeights.createDefault();
+var executorService = Executors.newVirtualThreadPerTaskExecutor();
+
+var rpcCaller = new RpcCaller(executorService, rpcClients, callWeights);
+var epochInfo = rpcCaller.courteousGet(
+    SolanaRpcClient::getEpochInfo,
+    getEpochInfoCallContext,
+    "rpcClient::getEpochInfo"
+);
+```
+
 ### [Epoch Info Service](https://github.com/sava-software/ravina/blob/main/solana/src/main/java/software/sava/services/solana/epoch/EpochInfoService.java)
 
 Periodically polls for slot performance stats and epoch information to create
@@ -218,13 +240,32 @@ which provides the following features:
 
 ```json
 {
-  "defaultMillisPerSlot": 405,
-  "minMillisPerSlot": 400,
+  "defaultMillisPerSlot": 410,
+  "minMillisPerSlot": 390,
   "maxMillisPerSlot": 500,
   "slotSampleWindow": "13M",
   "fetchSlotSamplesDelay": "8M",
   "fetchEpochInfoAfterEndDelay": "0.5S"
 }
+```
+
+#### Epoch Info Service Usage
+
+```java
+var jsonConfig = "null";
+var epochServiceConfig = EpochServiceConfig.parseConfig(ji);
+if (epochServiceConfig == null) {
+  epochServiceConfig = EpochServiceConfig.createDefault();
+}
+var epochInfoService = EpochInfoService.createService(epochServiceConfig, rpcCaller);
+
+var executorService = Executors.newSingleThreadExecutor();
+executorService.execute(epochInfoService);
+
+epochInfoService.awaitInitialized();
+
+var epochInfo = epochInfoService.epochInfo();
+System.out.println(epochInfo);
 ```
 
 ### [Web Socket Manager](https://github.com/sava-software/ravina/blob/main/solana/src/main/java/software/sava/services/solana/websocket/WebSocketManager.java)
