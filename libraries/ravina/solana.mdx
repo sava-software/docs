@@ -1,0 +1,199 @@
+---
+title: "Ravina Solana"
+sidebarTitle: "Solana"
+description: "Components to ease the development of Solana based services."
+---
+
+<Card title="GitHub Repository" icon="github" horizontal={true} href="https://github.com/sava-software/ravina" />
+
+## [Dependencies](https://github.com/sava-software/ravina/blob/main/solana/src/main/java/module-info.java)
+
+- java.net.http
+- [systems.comodal.json_iterator](https://github.com/comodal/json-iterator?tab=readme-ov-file#json-iterator)
+- [org.bouncycastle.provider](https://www.bouncycastle.org/download/bouncy-castle-java/#latest)
+- software.sava.core
+- software.sava.rpc
+- software.sava.solana_programs
+- software.sava.anchor_src_gen
+- software.sava.anchor_programs
+- software.sava.ravina_core
+- software.sava.kms_core
+
+## RPC Caller
+
+Ties together a [load balancer](/libraries/ravina/core#load-balancer), rpc call weights and an executor service to make using remote calls more convenient.
+
+### RPC Caller Construction
+
+```java
+LoadBalancer<SolanaRpcClient> loadBalancer = null; // See LoadBalancer in Ravina Core
+var callWeights = CallWeights.createDefault();
+var executorService = Executors.newVirtualThreadPerTaskExecutor();
+
+var rpcCaller = new RpcCaller(executorService, rpcClients, callWeights);
+var epochInfo = rpcCaller.courteousGet(
+    SolanaRpcClient::getEpochInfo,
+    getEpochInfoCallContext,
+    "rpcClient::getEpochInfo"
+);
+```
+
+## [Epoch Info Service](https://github.com/sava-software/ravina/blob/main/solana/src/main/java/software/sava/services/solana/epoch/EpochInfoService.java)
+
+Periodically polls for slot performance stats and epoch information to create
+an [Epoch data record](https://github.com/sava-software/ravina/blob/main/solana/src/main/java/software/sava/services/solana/epoch/Epoch.java)
+which provides the following features:
+
+- Duration remaining for a given time unit.
+- Percent complete.
+- Epochs per year.
+- The current slot index.
+- The current block height accounting for a skip rate.
+- [SlotPerformanceStats](https://github.com/sava-software/ravina/blob/main/solana/src/main/java/software/sava/services/solana/epoch/SlotPerformanceStats.java)
+
+### [Epoch Service Configuration](https://github.com/sava-software/ravina/blob/main/solana/src/main/java/software/sava/services/solana/epoch/EpochServiceConfig.java)
+
+- **defaultMillisPerSlot**: Used if performance samples are not available.
+- **minMillisPerSlot**: Performance samples will be capped to greater than or equal to this value.
+- **maxMillisPerSlot**: Performance samples will be capped to less than or equal to this value.
+- **slotSampleWindow**: The recent time window to draw performance samples.
+- **fetchSlotSamplesDelay**: Poll new performance samples and epoch information delay.
+- **fetchEpochInfoAfterEndDelay**: Also fetch new performance samples and epoch information after each epoch rollover.
+
+```json
+{
+  "defaultMillisPerSlot": 410,
+  "minMillisPerSlot": 390,
+  "maxMillisPerSlot": 500,
+  "slotSampleWindow": "13M",
+  "fetchSlotSamplesDelay": "8M",
+  "fetchEpochInfoAfterEndDelay": "0.5S"
+}
+```
+
+### Epoch Info Service Usage
+
+```java
+var jsonConfig = "null";
+var epochServiceConfig = EpochServiceConfig.parseConfig(ji);
+if (epochServiceConfig == null) {
+  epochServiceConfig = EpochServiceConfig.createDefault();
+}
+var epochInfoService = EpochInfoService.createService(epochServiceConfig, rpcCaller);
+
+var executorService = Executors.newSingleThreadExecutor();
+executorService.execute(epochInfoService);
+
+epochInfoService.awaitInitialized();
+
+var epochInfo = epochInfoService.epochInfo();
+System.out.println(epochInfo);
+```
+
+## [Web Socket Manager](https://github.com/sava-software/ravina/blob/main/solana/src/main/java/software/sava/services/solana/websocket/WebSocketManager.java)
+
+Used to manage the connection of a SolanaRpcWebsocket. Call `checkConnection` to drive re-connections. If errors are
+observed, the corresponding delay from the provided [Backoff](/libraries/ravina/core#backoff) will be respected.
+
+### Pseudo Web Socket Manager Usage
+
+```java
+var backoff = Backoff.exponential(1, 32);
+var account = PublicKey.fromBase58Encoded("");
+
+var httpClient = HttpClient.newHttpClient();
+var webSocketManager = WebSocketManager.createManager(
+    httpClient,
+    URI.create("wss://url"),
+    backoff,
+    webSocket -> webSocket.accountSubscribe(account, System.out::println)
+);
+
+for (;;) {
+    webSocketManager.checkConnection();
+    Thread.sleep(1_000);
+}
+```
+
+### [Web Socket Manager Configuration](https://github.com/sava-software/services/blob/main/core/src/main/java/software/sava/services/core/config/RemoteResourceConfig.java)
+
+* **endpoint**: websocket url.
+* **backoff**: Used for connection attempts in response to failures.
+
+
+## [Chain Item Formatter](https://github.com/sava-software/services/blob/main/solana/src/main/java/software/sava/services/solana/config/ChainItemFormatter.java)
+
+Used to provide more convenient logging of accounts and transaction hashes.
+
+### Formatter Usage
+
+```java
+var jsonConfig = """
+    {
+      "sig": "https://solscan.io/tx/%s",
+      "address": "https://solscan.io/account/%s"
+    }
+    """;
+var ji = JsonIterator.parse(jsonConfig);
+var formatter = ChainItemFormatter.parseFormatter(ji);
+System.out.println(formatter.formatSig("5yem9DTy4mHa94yKVCSuQYixvtt27aF2L2bcms8jsgv2Yvgj2FY4DXYpUmN5TBvRX8xC99R6ea1k5eJJb2hVGmxF"));
+```
+
+## [Lookup Table Cache](https://github.com/sava-software/ravina/blob/main/solana/src/main/java/software/sava/services/solana/alt/LookupTableCache.java)
+
+May be used to dynamically fetch lookup tables.  Ideally used in conjunction with a websocket to maintain the latest view of a table.
+The current implementation only removes tables if they are no longer active or no longer exist on-chain.
+
+### Lookup Table Cache Usage
+
+```java
+var taskExecutor = Executors.newVirtualThreadPerTaskExecutor();
+var tableCache = LookupTableCache.createCache(
+    taskExecutor,
+    128, // initial map capacity
+    rpcCaller.rpcClients(),
+    AddressLookupTable.FACTORY
+);
+
+AddressLookupTable table = tableCache.getOrFetchTable(PublicKey.fromBase58Encoded(""));
+```
+
+## [Transaction Processor](https://github.com/sava-software/ravina/blob/main/solana/src/main/java/software/sava/services/solana/transactions/TransactionProcessor.java)
+
+Convenience methods for creating, simulating, signing and sending transactions.
+
+### Transaction Processor Construction
+
+```java
+SigningService signingService = null; // See the Sava KMS project.
+var servicePublicKey = signingService.publicKey().join();
+
+LoadBalancer<SolanaRpcClient> rpcClients = null; // See LoadBalancer in Ravina Core
+LoadBalancer<SolanaRpcClient> sendClients = null; // Used only for sending transactions.
+LoadBalancer<FeeProvider> feeProviders = null; // Provides priority fees given a transaction. 
+
+WebSocketManager webSocketManager = null; // See docs above.
+
+var formatter = ChainItemFormatter.createDefault();
+var solanaAccounts = SolanaAccounts.MAIN_NET;
+
+var taskExecutor = Executors.newVirtualThreadPerTaskExecutor();
+
+var tableCache = LookupTableCache.createCache(taskExecutor, 128, rpcCaller.rpcClients());
+
+var callWeights = CallWeights.createDefault();
+
+var transactionProcessor = TransactionProcessor.createProcessor(
+    taskExecutor,
+    signingService,
+    tableCache,
+    servicePublicKey,
+    solanaAccounts,
+    formatter,
+    rpcClients,
+    sendClients,
+    feeProviders,
+    callWeights,
+    webSocketManager
+);
+```

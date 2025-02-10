@@ -43,7 +43,13 @@
         "/libraries/anchor-programs",
         "/libraries/web2",
         "/libraries/kms",
-        "/libraries/ravina"
+        {
+          "group": "Ravina",
+          "pages": [
+            "/libraries/ravina/core",
+            "/libraries/ravina/solana"
+          ]
+        }
       ]
     },
     {
