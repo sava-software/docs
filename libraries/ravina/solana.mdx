@@ -19,18 +19,48 @@ description: "Components to ease the development of Solana based services."
 - software.sava.ravina_core
 - software.sava.kms_core
 
+## RPC Call Weights
+
+### RPC Call Weights Construction
+
+Used to match the request capacity available for a given RPC provider.
+
+```java
+var jsonConfig = """
+    {
+      "getProgramAccounts": 2,
+      "getTransaction": 5,
+      "sendTransaction": 10
+    }
+    """;
+
+var ji = JsonIterator.parse(jsonConfig);
+
+var rpcCallWeights = CallWeights.parse(ji);
+```
+
 ## RPC Caller
 
-Ties together a [load balancer](/libraries/ravina/core#load-balancer), rpc call weights and an executor service to make using remote calls more convenient.
+Ties together a [Load Balancer](/libraries/ravina/core#load-balancer), [RPC Call Weights](/libraries/ravina/solana#rpc-call-weights) and an Executor Service to make using remote calls more convenient.
 
 ### RPC Caller Construction
 
 ```java
 LoadBalancer<SolanaRpcClient> loadBalancer; // See LoadBalancer in Ravina Core
-var callWeights = CallWeights.createDefault();
+var rpcCallWeights = CallWeights.createDefault();
 var executorService = Executors.newVirtualThreadPerTaskExecutor();
 
-var rpcCaller = new RpcCaller(executorService, rpcClients, callWeights);
+var rpcCaller = new RpcCaller(executorService, loadBalancer, rpcCallWeights);
+
+var getEpochInfoCallContext = CallContext.createContext(
+    1,    // Call weight.
+    0,    // Minimum capacity required before sending.
+    1,    // Maximum times to try to claim capacity.
+    true, // Eventually force the call.
+    0,    // Maximum times to retry call.
+    true  // Measure the call time to be tracked by the load balancer for prioritizing items.
+);
+
 var epochInfo = rpcCaller.courteousGet(
     SolanaRpcClient::getEpochInfo,
     getEpochInfoCallContext,
@@ -225,8 +255,9 @@ var txMonitorJsonConfig = """
       "retrySendDelay": "5S",
       "minBlocksRemainingToResend": 8
     }""";
+var ji = JsonIterator.parse(txMonitorJsonConfig);
 
-var txMonitorConfig = TxMonitorConfig.parseConfig(txMonitorJsonConfig);
+var txMonitorConfig = TxMonitorConfig.parseConfig(ji);
 
 var txMonitorService = TxMonitorService.createService(
     formatter,
