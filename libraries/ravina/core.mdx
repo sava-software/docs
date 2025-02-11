@@ -43,14 +43,14 @@ var backoff = backoffConfig == null
     : backoffConfig.createBackoff();
 
 for (long errorCount = 0; ; ) {
-  try {
-    // some I/O task.
-    break;
-  } catch (Exception e) {
-    System.err.format("Failed to do something %d time(s)%n", ++errorCount);
-    final long sleep = backoff.delay(errorCount, TimeUnit.MILLISECONDS);
-    Thread.sleep(sleep);
-  }
+    try {
+        // some I/O task.
+        break;
+    } catch (Exception e) {
+        System.err.format("Failed to do something %d time(s)%n", ++errorCount);
+        final long sleep = backoff.delay(errorCount, TimeUnit.MILLISECONDS);
+        Thread.sleep(sleep);
+    }
 }
 ```
 
@@ -80,12 +80,12 @@ var jsonConfig = "null";
 var ji = JsonIterator.parse(jsonConfig);
 var capacityConfig = CapacityConfig.parse(ji);
 if (capacityConfig == null) {
-  // 10 requests per second with a maximum complete backoff of 5 seconds.
-  capacityConfig = CapacityConfig.createSimpleConfig(
-      Duration.ofSeconds(5), // minCapacityDuration
-      10, // maxCapacity
-      Duration.ofSeconds(1) // resetDuration
-  );
+    // 10 requests per second with a maximum complete backoff of 5 seconds.
+    capacityConfig = CapacityConfig.createSimpleConfig(
+        Duration.ofSeconds(5), // minCapacityDuration
+        10, // maxCapacity
+        Duration.ofSeconds(1) // resetDuration
+    );
 }
 
 // Custom error tracker's may be implemented to handle responses other than HttpResponse<byte[]>.
@@ -128,8 +128,8 @@ var ji = JsonIterator.parse(jsonConfig);
 var loadBalancerConfig = LoadBalancerConfig.parse(ji);
 
 var items = loadBalancerConfig.createItems((endpoint, capacityMonitor, backoff) -> {
-  final var client = null; // Construct the client to your remote resource.
-  return BalancedItem.createItem(client, capacityMonitor, backoff);
+    final var client = null; // Construct the client to your remote resource.
+    return BalancedItem.createItem(client, capacityMonitor, backoff);
 });
 var loadBalancer = LoadBalancer.createSortedBalancer(items);
 ```
@@ -168,15 +168,16 @@ var httpRequest = HttpRequest.newBuilder(URI.create("https://api.domain.me/endpo
 
 try (var executor = Executors.newVirtualThreadPerTaskExecutor();
      var httpClient = HttpClient.newHttpClient()) {
-  var callFuture = Call.createCourteousCall(
-      () -> httpClient.sendAsync(httpRequest, HttpResponse.BodyHandlers.ofString()),
-      capacityState,
-      callContext,
-      backoff,
-      "retry log context"
-  ).async(executor);
-
-  var result = callFuture.join();
+  
+    var callFuture = Call.createCourteousCall(
+        () -> httpClient.sendAsync(httpRequest, HttpResponse.BodyHandlers.ofString()),
+        capacityState,
+        callContext,
+        backoff,
+        "retry log context"
+    ).async(executor);
+    
+    var result = callFuture.join();
 }
 ```
 
@@ -230,6 +231,7 @@ var webHookConfigList = WebHookConfig.parseConfigs(
     defaultBackoff
 );
 
+var httpClient = HttpClient.newHttpClient();
 var webHookClients = webHookConfigList.stream()
     .map(webHookConfig -> webHookConfig.createCaller(httpClient))
     .toList();
