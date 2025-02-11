@@ -35,8 +35,10 @@ var jsonConfig = """
     """;
 var ji = JsonIterator.parse(jsonConfig);
 
+// An executor service and backoff is only needed for remote signers.
 var executorService = Executors.newVirtualThreadPerTaskExecutor();
 var defaultBackoff = Backoff.exponential(1, 16);
+
 var signingServiceConfig = SigningServiceConfig.parseConfig(executorService, defaultBackoff, ji);
 
 var signingService = signingServiceConfig.signingService();
