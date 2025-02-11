@@ -26,9 +26,11 @@ Load from service config.
 ```java
 // See more configuration examples below.
 var jsonConfig = """
-    "factoryClass": "software.sava.kms.core.signing.MemorySignerFromFilePointerFactory",
-    "config": {
-      "filePath": "/path/to/secret.json"
+    {
+      "factoryClass": "software.sava.kms.core.signing.MemorySignerFromFilePointerFactory",
+      "config": {
+        "filePath": "/path/to/secret.json"
+      }
     }
     """;
 var ji = JsonIterator.parse(jsonConfig);
@@ -50,7 +52,7 @@ Load from concrete implementation config.
 
 ```java
 var jsonConfig = """
-    "config": {
+    {
       "filePath": "/path/to/secret.json"
     }
     """;
