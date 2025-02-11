@@ -126,7 +126,10 @@ webSocket.programSubscribe(
 #### Address Lookup Tables
 
 ```java
-webSocket.programSubscribe(SolanaAccounts.MAIN_NET.addressLookupTableProgram(), accountInfo -> {
+var solanaAccounts = SolanaAccounts.MAIN_NET;
+var addressLookupTableProgram = solanaAccounts.addressLookupTableProgram();
+
+webSocket.programSubscribe(addressLookupTableProgram, accountInfo -> {
     var table = AddressLookupTable.read(accountInfo.pubKey(), accountInfo.data());
     System.out.println(table);
 });

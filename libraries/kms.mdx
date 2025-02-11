@@ -24,7 +24,13 @@ The KMS library provides `SigningService` and `SigningServiceFactory` interfaces
 Load from service config.
 
 ```java
-var jsonConfig = ""; // See examples below.
+// See more configuration examples below.
+var jsonConfig = """
+    "factoryClass": "software.sava.kms.core.signing.MemorySignerFromFilePointerFactory",
+    "config": {
+      "filePath": "/path/to/secret.json"
+    }
+    """;
 var ji = JsonIterator.parse(jsonConfig);
 
 var executorService = Executors.newVirtualThreadPerTaskExecutor();
@@ -35,7 +41,9 @@ var signingService = signingServiceConfig.signingService();
 
 var servicePublicKey = signingService.publicKey().join();
 
-byte[] sig = signingService.sign("Hello World".getBytes()).join();
+byte[] msg = "Hello World".getBytes();
+byte[] sig = signingService.sign(msg).join();
+System.out.println(servicePublicKey.verifySignature(msg, sig)); // true
 ```
 
 Load from concrete implementation config.
