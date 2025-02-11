@@ -224,6 +224,10 @@ var defaultRequestCapacity = CapacityConfig.createSimpleConfig(
     Duration.ofSeconds(1)
 );
 var defaultBackoff = Backoff.fibonacci(1, 21);
+
+var jsonConfig = "";
+var ji = JsonIterator.parse(jsonConfig);
+
 var webHookConfigList = WebHookConfig.parseConfigs(
     ji,
     null, // default body format
@@ -244,6 +248,8 @@ var callContext = CallContext.createContext(
     5, // Maximum retries.
     false // Measure call time.
 );
+
+var executorService = Executors.newVirtualThreadPerTaskExecutor();
 
 var msg = "Something happened!";
 
