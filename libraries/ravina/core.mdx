@@ -32,7 +32,7 @@ Backoff strategy in response to I/O errors.
 * **initialRetryDelay**
 * **maxRetryDelay**
 
-### Usage
+### Backoff Usage
 
 ```java
 var jsonConfig = "null";
@@ -73,7 +73,7 @@ per call, and also potentially when response errors are observed.
 * **serverErrorBackOffDuration**: Reduce capacity if remove server errors are observed.
 * **rateLimitedBackOffDuration**: Reduce capacity if rate limit errors are observed.
 
-### Construction
+### Capacity Construction
 
 ```java
 var jsonConfig = "null";
@@ -120,7 +120,7 @@ Wrapper around a single item.
   * **capacity**: Overrides **defaultCapacity**
   * **backoff**: Overrides **defaultBackoff**
 
-### Construction
+### Load Balancer Construction
 
 ```java
 var jsonConfig = "";
@@ -212,4 +212,44 @@ Generic client to POST JSON messages.
     }
   }
 ]
+```
+
+### WebHook Client Usage
+
+```java
+var defaultRequestCapacity = CapacityConfig.createSimpleConfig(
+    Duration.ofSeconds(13),
+    2,
+    Duration.ofSeconds(1)
+);
+var defaultBackoff = Backoff.fibonacci(1, 21);
+var webHookConfigList = WebHookConfig.parseConfigs(
+    ji,
+    null, // default body format
+    defaultRequestCapacity,
+    defaultBackoff
+);
+
+var webHookClients = serviceConfig.webHookConfigs().stream()
+    .map(webHookConfig -> webHookConfig.createCaller(httpClient))
+    .toList();
+
+var callContext = CallContext.createContext(
+    1, // Call weight.
+    0, // Minimum capacity needed.
+    8, // Maximum times to try to claim capacity.
+    true, // Eventually force the call.
+    5, // Maximum retries.
+    false // Measure call time.
+);
+
+var msg = "Something happened!";
+
+for (var webHookClient : webHookClients) {
+    var responseFuture = caller.createCourteousCall(
+        webHookClient -> webHookClient.postMsg(msg),
+        callContext,
+        "webHookClient::postMsg"
+    ).async(executorService);
+}
 ```
