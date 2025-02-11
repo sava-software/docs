@@ -246,7 +246,7 @@ The transaction is simulated against a Confirmed state.
 
 The blockhash and its height is taken from the simulation result to enable expiration tracking.
 
-After sending a transaction, a confirmed state signature status Web Socket subscription is made, which expires based on the Transaction Monitor Service's configuration. 
+After sending a transaction, a confirmed state signature status Web Socket subscription is made, which expires based on the Transaction Monitor configuration. 
 
 If a response message is received over the Web Socket and a finalized state is desired an additional subscription is made, which expires two times the estimated duration of 32 blocks.
 
@@ -254,7 +254,7 @@ If the Web Socket subscriptions time out the service falls back to polling signa
 The monitor will make at least one call without transaction history and optionally continue to do so until the transactions' block has expired.
 After which one final call is made with transaction history enabled to ensure the transaction did not land but was expired from the local history node cache.
 
-While waiting for expiration the transaction may optionally be re-sent based on Transaction Monitor Service's configuration.
+While waiting for expiration the transaction may optionally be re-sent based on the Transaction Monitor configuration.
 
 ###
 
@@ -289,7 +289,7 @@ var transactionResult = instructionService.processInstructions(
     FINALIZED, // Await finalization if successful.
     CONFIRMED, // Only await confirmed if fails, e.g., slippage exceeded.
     true, // Verify expired, if the network is not aware of the transaction wait 151 blocks to ensure it cannot be applied.
-    true, // Continue to re-send the transaction based on the Transaction Monitor Service's configuration.
+    true, // Continue to re-send the transaction based on the Transaction Monitor configuration.
     0, // Number of times to re-construct the transaction with a new block hash after expiration.
     transactionProcessor.transactionFactory(lookupTableKeys), // Uses an internal address lookup table cache.
     "jupiter swap" // log context.
