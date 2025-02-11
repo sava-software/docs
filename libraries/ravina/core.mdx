@@ -157,7 +157,7 @@ after which it will either give up and return null or force the call.
 ### Remote Call Usage
 
 ```java
-ErrorTrackedCapacityMonitor<HttpResponse<byte[]>> capacityMonitor = null;
+ErrorTrackedCapacityMonitor<HttpResponse<byte[]>> capacityMonitor;
 var capacityState = capacityMonitor.capacityState();
 var backoff = Backoff.exponential(1, 16);
 var callContext = CallContext.createContext(
