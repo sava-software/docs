@@ -231,7 +231,7 @@ var transactionProcessor = TransactionProcessor.createProcessor(
 
 ## [Transaction Monitor Service](https://github.com/sava-software/ravina/blob/main/solana/src/main/java/software/sava/services/solana/transactions/TxMonitorService.java)
 
-Provides functionality for tracking transaction confirmation status via asynchronous and polling signature status RPC calls. 
+Provides functionality for tracking transaction confirmation via asynchronous and polling signature status RPC calls. 
 Up to 256 transaction signatures are checked for each polling call.
 It is recommended to use this with the Instruction or Batch Instruction Services, rather than directly.
 
@@ -283,7 +283,7 @@ If a response message is received over the Web Socket and a finalized state is d
 
 If the Web Socket subscriptions time out the service falls back to polling signature status calls. 
 The monitor will make at least one call without transaction history and optionally continue to do so until the transactions' block has expired.
-After which one final call is made with transaction history enabled to ensure the transaction did not land but was expired from the local history node cache.
+After which one final call is made with transaction history enabled to ensure the transaction did not land but was expired from the recent history cache.
 
 While waiting for expiration the transaction may optionally be re-sent based on the Transaction Monitor configuration.
 
