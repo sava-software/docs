@@ -83,6 +83,7 @@ var programClient = NativeProgramClient.createClient();
 var programAccountClient = programClient.createAccountClient(feePayer);
 
 try (var httpClient = HttpClient.newHttpClient()) {
+  
   var rpcClient = SolanaRpcClient.createClient(
       SolanaNetwork.MAIN_NET.getEndpoint(),
       httpClient
@@ -104,6 +105,28 @@ try (var httpClient = HttpClient.newHttpClient()) {
 
   var instructions = List.of(createStakeAccountIx, initializeIx, transferIx, delegateStakeIx);
 }
+```
+
+### Create & Extend Lookup Table
+
+```java 
+var programClient = NativeProgramClient.createClient();
+var programAccountClient = programClient.createAccountClient(feePayer);
+
+var newAccounts = List.of(
+    PublicKey.fromBase58Encoded(""),
+    PublicKey.fromBase58Encoded(""),
+    PublicKey.fromBase58Encoded("")
+);
+
+long recentSlot = rpcClient.getSlot(FINALIZED).join();
+
+var lookupTablePDA = nativeProgramAccountClient.findLookupTableAddress(recentSlot);
+
+var createLookupTableIx = nativeProgramAccountClient.createLookupTable(lookupTablePDA, recentSlot);
+var extendTableIx = nativeProgramAccountClient.extendLookupTable(lookupTablePDA.publicKey(), newAccounts);
+
+var instructions = List.of(createLookupTableIx, extendTableIx);
 ```
 
 ## Durable Nonce Transactions
