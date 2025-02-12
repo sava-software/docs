@@ -89,7 +89,7 @@ try (var httpClient = HttpClient.newHttpClient()) {
   );
   var minRent = NativeProgramClient.getMinimumBalanceForStakeAccount(rpcClient).join();
 
-  var seed = ZonedDateTime.now().toString();
+  var seed = ZonedDateTime.now(ZoneOffset.UTC).toString();
   var uninitializedStakeAccount = programAccountClient.createOffCurveStakeAccountWithSeed(seed);
 
   var createStakeAccountIx = programAccountClient.createStakeAccountWithSeed(
