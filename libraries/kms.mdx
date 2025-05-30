@@ -4,13 +4,13 @@ sidebarTitle: "KMS"
 description: "KMS clients for the purpose of isolating ed25519 private key signing."
 ---
 
-<Card title="GitHub Repository" icon="github" horizontal={true} href="https://github.com/sava-software/kms" />
+<Card title="GitHub Repository" icon="github" horizontal={true} href="https://github.com/sava-software/ravina/tree/main/kms" />
 
 ## Core
 
-### [Dependencies](https://github.com/sava-software/kms/blob/main/kms_core/src/main/java/module-info.java)
+### [Dependencies](https://github.com/sava-software/ravina/blob/main/kms/core/src/main/java/module-info.java)
 
-- [systems.comodal.json_iterator](https://github.com/comodal/json-iterator?tab=readme-ov-file#json-iterator)
+- software.sava.json.iterator
 - software.sava.core
 - software.sava.rpc
 - software.sava.ravina_core
@@ -95,7 +95,7 @@ Local configuration of secret information.
 
 ##### Factory Class
 
-[software.sava.kms.core.signing.MemorySignerFactory](https://github.com/sava-software/kms/blob/main/kms_core/src/main/java/software/sava/kms/core/signing/MemorySignerFactory.java)
+[software.sava.kms.core.signing.MemorySignerFactory](https://github.com/sava-software/ravina/blob/main/kms/core/src/main/java/software/sava/kms/core/signing/MemorySignerFactory.java)
 
 ##### Configuration
 
@@ -115,7 +115,7 @@ Points to a file with the secret contents as shown above.
 
 ##### Factory Class
 
-[software.sava.kms.core.signing.MemorySignerFromFilePointerFactory](https://github.com/sava-software/kms/blob/main/kms_core/src/main/java/software/sava/kms/core/signing/MemorySignerFromFilePointerFactory.java)
+[software.sava.kms.core.signing.MemorySignerFromFilePointerFactory](https://github.com/sava-software/ravina/blob/main/kms/core/src/main/java/software/sava/kms/core/signing/MemorySignerFromFilePointerFactory.java)
 
 ##### Configuration
 
@@ -129,10 +129,10 @@ Points to a file with the secret contents as shown above.
 
 Host an independent HTTP server that signs data.
 
-### [Dependencies](https://github.com/sava-software/kms/blob/main/http_kms/src/main/java/module-info.java)
+### [Dependencies](https://github.com/sava-software/ravina/blob/main/kms/http/src/main/java/module-info.java)
 
 - java.net.http
-- [systems.comodal.json_iterator](https://github.com/comodal/json-iterator?tab=readme-ov-file#json-iterator)
+- software.sava.json.iterator
 - software.sava.core
 - software.sava.rpc
 - software.sava.ravina_core
@@ -159,7 +159,7 @@ trusted.
 
 ### Factory Class
 
-[software.sava.kms.http.HttpKMSClientFactory](https://github.com/sava-software/kms/blob/main/http_kms/src/main/java/software/sava/kms/http/HttpKMSClientFactory.java)
+[software.sava.kms.http.HttpKMSClientFactory](https://github.com/sava-software/ravina/blob/main/kms/http/src/main/java/software/sava/kms/http/HttpKMSClientFactory.java)
 
 ### User Configuration
 
@@ -184,7 +184,7 @@ Use [Google Cloud Key Management Service](https://cloud.google.com/kms/docs/) to
 
 ### Dependencies
 
-- [systems.comodal.json_iterator](https://github.com/comodal/json-iterator?tab=readme-ov-file#json-iterator)
+- software.sava.json.iterator
 - software.sava.core
 - software.sava.rpc
 - software.sava.ravina_core
@@ -193,7 +193,7 @@ Use [Google Cloud Key Management Service](https://cloud.google.com/kms/docs/) to
 
 ### Factory Class
 
-[GoogleKMSClientFactory](https://github.com/sava-software/kms/blob/main/google_kms/src/main/java/software/sava/kms/google/GoogleKMSClientFactory.java)
+[GoogleKMSClientFactory](https://github.com/sava-software/ravina/blob/main/kms/google/src/main/java/software/sava/kms/google/GoogleKMSClientFactory.java)
 
 ### Configuration
 
