@@ -5,27 +5,27 @@ description: "Common Solana Cryptography & Serialization Utilities."
 
 <Card title="GitHub Repository" icon="github" horizontal={true} href="https://github.com/sava-software/sava"/>
 
-## [Dependencies](https://github.com/sava-software/sava/blob/main/core/src/main/java/module-info.java)
+## [Dependencies](https://github.com/sava-software/sava/blob/main/sava-core/src/main/java/module-info.java)
 - [org.bouncycastle.provider](https://www.bouncycastle.org/download/bouncy-castle-java/#latest)
 
 ## Features
 
 * [Transaction (de)serialization](#transaction-deserialization)
-* [Accounts Types:](https://github.com/sava-software/sava/tree/main/core/src/main/java/software/sava/core/accounts)
+* [Account Types:](https://github.com/sava-software/sava/tree/main/sava-core/src/main/java/software/sava/core/accounts)
   * Token, Mint, Token2022 and extensions
   * Address Lookup Tables
   * Sysvar
     * Clock
     * EpochRewards
-* [Common collection of main-net addresses](https://github.com/sava-software/sava/blob/main/core/src/main/java/software/sava/core/accounts/SolanaAccounts.java)
-* Ed25519 [public](https://github.com/sava-software/sava/blob/main/core/src/main/java/software/sava/core/accounts/PublicKey.java) and [private](https://github.com/sava-software/sava/blob/main/core/src/main/java/software/sava/core/accounts/Signer.java) keys
+* [Common collection of main-net addresses](https://github.com/sava-software/sava/tree/main/sava-core/src/main/java/software/sava/core/accounts/SolanaAccounts.java)
+* Ed25519 [public](https://github.com/sava-software/sava/tree/main/sava-core/src/main/java/software/sava/core/accounts/PublicKey.java) and [private](https://github.com/sava-software/sava/tree/main/sava-core/src/main/java/software/sava/core/accounts/Signer.java) keys
 * Program derived addresses
-* [Borsh (de)serialization](https://github.com/sava-software/sava/blob/main/core/src/main/java/software/sava/core/borsh/Borsh.java)
-* [Encoding:](https://github.com/sava-software/sava/tree/main/core/src/main/java/software/sava/core/encoding)
-  * [Base58](https://github.com/sava-software/sava/blob/main/core/src/main/java/software/sava/core/encoding/Base58.java)
-  * [Hex](https://github.com/sava-software/sava/blob/main/core/src/main/java/software/sava/core/encoding/Jex.java)
-  * [Little Endian Numbers](https://github.com/sava-software/sava/blob/main/core/src/main/java/software/sava/core/encoding/ByteUtil.java)
-  * [Compact u16](https://github.com/sava-software/sava/blob/main/core/src/main/java/software/sava/core/encoding/CompactU16Encoding.java)
+* [Borsh (de)serialization](https://github.com/sava-software/sava/tree/main/sava-core/src/main/java/software/sava/core/borsh/Borsh.java)
+* [Encoding:](https://github.com/sava-software/sava/tree/main/sava-core/src/main/java/software/sava/core/encoding)
+  * [Base58](https://github.com/sava-software/sava/tree/main/sava-core/src/main/java/software/sava/core/encoding/Base58.java)
+  * [Hex](https://github.com/sava-software/sava/tree/main/sava-core/src/main/java/software/sava/core/encoding/Jex.java)
+  * [Little Endian Numbers](https://github.com/sava-software/sava/tree/main/sava-core/src/main/java/software/sava/core/encoding/ByteUtil.java)
+  * [Compact u16](https://github.com/sava-software/sava/tree/main/sava-core/src/main/java/software/sava/core/encoding/CompactU16Encoding.java)
 
 ## Private Key Parsing
 
@@ -92,9 +92,9 @@ Encoded 32 byte private key.
 
 ## Transaction Deserialization
 
-The [TransactionSkeleton](https://github.com/sava-software/sava/blob/main/core/src/main/java/software/sava/core/tx/TransactionSkeleton.java)
+The [TransactionSkeleton](https://github.com/sava-software/sava/tree/main/sava-core/src/main/java/software/sava/core/tx/TransactionSkeleton.java)
 interface provides a lightweight view over transaction data. Allowing for partial introspection or complete reconstruction of
-a [Transaction](https://github.com/sava-software/sava/blob/main/core/src/main/java/software/sava/core/tx/Transaction.java).
+a [Transaction](https://github.com/sava-software/sava/tree/main/sava-core/src/main/java/software/sava/core/tx/Transaction.java).
 
 ### Legacy
 
