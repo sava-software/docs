@@ -22,34 +22,24 @@ Add all the relevant repositories and library dependencies you want to use. The 
 <Tabs>
   <Tab title="Gradle">
     <CodeGroup>
-      ```groovy build.gradle
-      repositories {
-        maven {
-          url = "https://maven.pkg.github.com/sava-software/sava"
-          credentials {
-            username = GITHUB_USERNAME
-            password = GITHUB_PERSONAL_ACCESS_TOKEN
-          }
-        }
-        maven {
-          url = "https://maven.pkg.github.com/comodal/json-iterator"
-          credentials {
-            username = GITHUB_USERNAME
-            password = GITHUB_PERSONAL_ACCESS_TOKEN
-          }
-        }
+      ```groovy build.gradle.kts
+      dependencies {
+        implementation("software.sava:sava-core:$VERSION")
+        implementation("software.sava:sava-rpc:$VERSION")
       }
+      ```
 
+      ```groovy build.gradle
       dependencies {
         implementation "software.sava:sava-core:$VERSION"
         implementation "software.sava:sava-rpc:$VERSION"
       }
       ```
+
     </CodeGroup>
   </Tab>
 
   <Tab title="Maven">
-    <CodeGroup>
       ```markup pom.xml
       <dependencies>
           <dependency>
@@ -63,38 +53,7 @@ Add all the relevant repositories and library dependencies you want to use. The 
               <version>VERSION</version>
           </dependency>
       </dependencies>
-
-      <repositories>
-        <repository>
-            <id>gpr-sava</id>
-            <name>sava</name>
-            <url>https://maven.pkg.github.com/sava-software/sava</url>
-        </repository>
-        <repository>
-            <id>gpr-json-iterator</id>
-            <name>json-iterator</name>
-            <url>https://maven.pkg.github.com/comodal/json-iterator</url>
-        </repository>
-      </repositories>
       ```
-
-      ```markup settings.xml
-      <settings>
-          <servers>
-              <server>
-                  <id>gpr-sava</id>
-                  <username>GITHUB_USERNAME</username>
-                  <password>GITHUB_PERSONAL_ACCESS_TOKEN</password>
-              </server>
-              <server>
-                  <id>gpr-json-iterator</id>
-                  <username>GITHUB_USERNAME</username>
-                  <password>GITHUB_PERSONAL_ACCESS_TOKEN</password>
-              </server>
-          </servers>
-      </settings>
-      ```
-    </CodeGroup>
   </Tab>
 </Tabs>
 

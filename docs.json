@@ -1,0 +1,93 @@
+{
+  "$schema": "https://mintlify.com/docs.json",
+  "theme": "mint",
+  "name": "Sava",
+  "colors": {
+    "primary": "#9945FF",
+    "light": "#14F195",
+    "dark": "#9945FF"
+  },
+  "favicon": "/favicon.svg",
+  "navigation": {
+    "groups": [
+      {
+        "group": "Get Started",
+        "pages": [
+          "welcome",
+          "quickstart"
+        ]
+      },
+      {
+        "group": "Libraries",
+        "pages": [
+          "libraries/core",
+          "libraries/rpc",
+          "libraries/programs",
+          "libraries/anchor-programs",
+          "libraries/web2",
+          {
+            "group": "Ravina",
+            "pages": [
+              "libraries/ravina/core",
+              "libraries/ravina/kms",
+              "libraries/ravina/solana"
+            ]
+          }
+        ]
+      },
+      {
+        "group": "Utilities",
+        "pages": [
+          "utilities/anchor-src-gen",
+          "utilities/vanity"
+        ]
+      },
+      {
+        "group": "About",
+        "pages": [
+          "about/project",
+          "about/spotlight"
+        ]
+      }
+    ]
+  },
+  "logo": {
+    "light": "/logo/sava-logo-dark.svg",
+    "dark": "/logo/sava-logo-light.svg"
+  },
+  "navbar": {
+    "links": [
+      {
+        "label": "Support",
+        "href": "mailto:hello@sava.software"
+      }
+    ],
+    "primary": {
+      "type": "button",
+      "label": "Github",
+      "href": "https://github.com/sava-software/"
+    }
+  },
+  "seo": {
+    "metatags": {
+      "og:site_name": "Solana Java SDK",
+      "og:title": "Sava | Solana Java SDK",
+      "og:url": "https://sava.software/",
+      "og:description": "Sava is a Java SDK for building Solana services.",
+      "og:image": "/sava-preview.jpg",
+      "og:image:width": "1200",
+      "og:image:height": "630",
+      "twitter:title": "Sava | Solana Java SDK",
+      "twitter:description": "Sava is a Java SDK for building Solana services.",
+      "twitter:image": "/sava-preview.jpg",
+      "twitter:site": "@sava_software"
+    },
+    "indexing": "all"
+  },
+  "footer": {
+    "socials": {
+      "x": "https://x.com/sava_software",
+      "github": "https://github.com/sava-software/"
+    }
+  }
+}

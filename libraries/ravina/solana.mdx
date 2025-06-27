@@ -6,11 +6,11 @@ description: "Components to ease the development of Solana based services."
 
 <Card title="GitHub Repository" icon="github" horizontal={true} href="https://github.com/sava-software/ravina" />
 
-## [Dependencies](https://github.com/sava-software/ravina/blob/main/solana/src/main/java/module-info.java)
+## [Dependencies](https://github.com/sava-software/ravina/blob/main/ravina-solana/src/main/java/module-info.java)
 
 - java.net.http
-- software.sava.json.iterator
 - [org.bouncycastle.provider](https://www.bouncycastle.org/download/bouncy-castle-java/#latest)
+- software.sava.json.iterator
 - software.sava.core
 - software.sava.rpc
 - software.sava.solana_programs
@@ -68,20 +68,20 @@ var epochInfo = rpcCaller.courteousGet(
 );
 ```
 
-## [Epoch Info Service](https://github.com/sava-software/ravina/blob/main/solana/src/main/java/software/sava/services/solana/epoch/EpochInfoService.java)
+## [Epoch Info Service](https://github.com/sava-software/ravina/blob/main/ravina-solana/src/main/java/software/sava/services/solana/epoch/EpochInfoService.java)
 
 Periodically polls for slot performance stats and epoch information to create
-an [Epoch data record](https://github.com/sava-software/ravina/blob/main/solana/src/main/java/software/sava/services/solana/epoch/Epoch.java)
+an [Epoch data record](https://github.com/sava-software/ravina/blob/main/ravina-solana/src/main/java/software/sava/services/solana/epoch/Epoch.java)
 which provides the following features:
 
-- Duration remaining for a given time unit.
+- The duration remaining for a given time unit.
 - Percent complete.
 - Epochs per year.
 - The current slot index.
 - The current block height accounting for a skip rate.
-- [SlotPerformanceStats](https://github.com/sava-software/ravina/blob/main/solana/src/main/java/software/sava/services/solana/epoch/SlotPerformanceStats.java)
+- [SlotPerformanceStats](https://github.com/sava-software/ravina/blob/main/ravina-solana/src/main/java/software/sava/services/solana/epoch/SlotPerformanceStats.java)
 
-### [Epoch Service Configuration](https://github.com/sava-software/ravina/blob/main/solana/src/main/java/software/sava/services/solana/epoch/EpochServiceConfig.java)
+### [Epoch Service Configuration](https://github.com/sava-software/ravina/blob/main/ravina-solana/src/main/java/software/sava/services/solana/epoch/EpochServiceConfig.java)
 
 - **defaultMillisPerSlot**: Used if performance samples are not available.
 - **minMillisPerSlot**: Performance samples will be capped to greater than or equal to this value.
@@ -122,7 +122,7 @@ var epochInfo = epochInfoService.epochInfo();
 System.out.println(epochInfo);
 ```
 
-## [Web Socket Manager](https://github.com/sava-software/ravina/blob/main/solana/src/main/java/software/sava/services/solana/websocket/WebSocketManager.java)
+## [Web Socket Manager](https://github.com/sava-software/ravina/blob/main/ravina-solana/src/main/java/software/sava/services/solana/websocket/WebSocketManager.java)
 
 Used to manage the connection of a SolanaRpcWebsocket. Call `checkConnection` to drive re-connections. If errors are
 observed, the corresponding delay from the provided [Backoff](/libraries/ravina/core#backoff) will be respected.
@@ -147,13 +147,13 @@ for (;;) {
 }
 ```
 
-### [Web Socket Manager Configuration](https://github.com/sava-software/services/blob/main/core/src/main/java/software/sava/services/core/config/RemoteResourceConfig.java)
+### [Web Socket Manager Configuration](https://github.com/sava-software/ravina/blob/main/ravina-core/src/main/java/software/sava/services/core/config/RemoteResourceConfig.java)
 
 * **endpoint**: websocket url.
 * **backoff**: Used for connection attempts in response to failures.
 
 
-## [Chain Item Formatter](https://github.com/sava-software/services/blob/main/solana/src/main/java/software/sava/services/solana/config/ChainItemFormatter.java)
+## [Chain Item Formatter](https://github.com/sava-software/ravina/blob/main/ravina-solana/src/main/java/software/sava/services/solana/config/ChainItemFormatter.java)
 
 Used to provide more convenient logging of accounts and transaction hashes.
 
@@ -171,7 +171,7 @@ var formatter = ChainItemFormatter.parseFormatter(ji);
 System.out.println(formatter.formatSig("5yem9DTy4mHa94yKVCSuQYixvtt27aF2L2bcms8jsgv2Yvgj2FY4DXYpUmN5TBvRX8xC99R6ea1k5eJJb2hVGmxF"));
 ```
 
-## [Lookup Table Cache](https://github.com/sava-software/ravina/blob/main/solana/src/main/java/software/sava/services/solana/alt/LookupTableCache.java)
+## [Lookup Table Cache](https://github.com/sava-software/ravina/blob/main/ravina-solana/src/main/java/software/sava/services/solana/alt/LookupTableCache.java)
 
 May be used to dynamically fetch lookup tables. Ideally used in conjunction with a websocket to maintain the latest view of a table.
 The current implementation only removes tables if they are no longer active or no longer exist on-chain.
@@ -190,9 +190,9 @@ var tableCache = LookupTableCache.createCache(
 AddressLookupTable table = tableCache.getOrFetchTable(PublicKey.fromBase58Encoded(""));
 ```
 
-## [Transaction Processor](https://github.com/sava-software/ravina/blob/main/solana/src/main/java/software/sava/services/solana/transactions/TransactionProcessor.java)
+## [Transaction Processor](https://github.com/sava-software/ravina/blob/main/ravina-solana/src/main/java/software/sava/services/solana/transactions/TransactionProcessor.java)
 
-Convenience methods for creating, simulating, signing and sending transactions.
+Convenience methods for creating, simulating, signing, and sending transactions.
 
 ### Transaction Processor Construction
 
@@ -229,7 +229,7 @@ var transactionProcessor = TransactionProcessor.createProcessor(
 );
 ```
 
-## [Transaction Monitor Service](https://github.com/sava-software/ravina/blob/main/solana/src/main/java/software/sava/services/solana/transactions/TxMonitorService.java)
+## [Transaction Monitor Service](https://github.com/sava-software/ravina/blob/main/ravina-solana/src/main/java/software/sava/services/solana/transactions/TxMonitorService.java)
 
 Provides functionality for tracking transaction confirmation via asynchronous and polling signature status RPC calls. 
 Up to 256 transaction signatures are checked for each polling call.
@@ -269,7 +269,7 @@ var txMonitorService = TxMonitorService.createService(
 );
 ```
 
-## [Instruction Service](https://github.com/sava-software/ravina/blob/main/solana/src/main/java/software/sava/services/solana/transactions/InstructionService.java)
+## [Instruction Service](https://github.com/sava-software/ravina/blob/main/ravina-solana/src/main/java/software/sava/services/solana/transactions/InstructionService.java)
 
 Handles transaction simulation, creation, and confirmation/expiration monitoring.
 
@@ -327,6 +327,6 @@ var transactionResult = instructionService.processInstructions(
 );
 ```
 
-## [Batch Instruction Service](https://github.com/sava-software/ravina/blob/main/solana/src/main/java/software/sava/services/solana/transactions/BatchInstructionService.java)
+## [Batch Instruction Service](https://github.com/sava-software/ravina/blob/main/ravina-solana/src/main/java/software/sava/services/solana/transactions/BaseBatchInstructionService.java)
 
 Extends the Instruction Service functionality by dynamically batching multiple instructions which may exceed the size of a single transaction into multiple transactions.

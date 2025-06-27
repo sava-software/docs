@@ -8,7 +8,7 @@ description: "KMS clients for the purpose of isolating ed25519 private key signi
 
 ## Core
 
-### [Dependencies](https://github.com/sava-software/ravina/blob/main/kms/core/src/main/java/module-info.java)
+### [Dependencies](https://github.com/sava-software/ravina/blob/main/ravina-kms/core/src/main/java/module-info.java)
 
 - software.sava.json.iterator
 - software.sava.core
@@ -95,7 +95,7 @@ Local configuration of secret information.
 
 ##### Factory Class
 
-[software.sava.kms.core.signing.MemorySignerFactory](https://github.com/sava-software/ravina/blob/main/kms/core/src/main/java/software/sava/kms/core/signing/MemorySignerFactory.java)
+[software.sava.kms.core.signing.MemorySignerFactory](https://github.com/sava-software/ravina/blob/main/ravina-kms/core/src/main/java/software/sava/kms/core/signing/MemorySignerFactory.java)
 
 ##### Configuration
 
@@ -115,7 +115,7 @@ Points to a file with the secret contents as shown above.
 
 ##### Factory Class
 
-[software.sava.kms.core.signing.MemorySignerFromFilePointerFactory](https://github.com/sava-software/ravina/blob/main/kms/core/src/main/java/software/sava/kms/core/signing/MemorySignerFromFilePointerFactory.java)
+[software.sava.kms.core.signing.MemorySignerFromFilePointerFactory](https://github.com/sava-software/ravina/blob/main/ravina-kms/core/src/main/java/software/sava/kms/core/signing/MemorySignerFromFilePointerFactory.java)
 
 ##### Configuration
 
@@ -129,7 +129,7 @@ Points to a file with the secret contents as shown above.
 
 Host an independent HTTP server that signs data.
 
-### [Dependencies](https://github.com/sava-software/ravina/blob/main/kms/http/src/main/java/module-info.java)
+### [Dependencies](https://github.com/sava-software/ravina/blob/main/ravina-kms/http/src/main/java/module-info.java)
 
 - java.net.http
 - software.sava.json.iterator
@@ -159,7 +159,7 @@ trusted.
 
 ### Factory Class
 
-[software.sava.kms.http.HttpKMSClientFactory](https://github.com/sava-software/ravina/blob/main/kms/http/src/main/java/software/sava/kms/http/HttpKMSClientFactory.java)
+[software.sava.kms.http.HttpKMSClientFactory](https://github.com/sava-software/ravina/blob/main/ravina-kms/http/src/main/java/software/sava/kms/http/HttpKMSClientFactory.java)
 
 ### User Configuration
 
@@ -193,7 +193,7 @@ Use [Google Cloud Key Management Service](https://cloud.google.com/kms/docs/) to
 
 ### Factory Class
 
-[GoogleKMSClientFactory](https://github.com/sava-software/ravina/blob/main/kms/google/src/main/java/software/sava/kms/google/GoogleKMSClientFactory.java)
+[GoogleKMSClientFactory](https://github.com/sava-software/ravina/blob/main/ravina-kms/google/src/main/java/software/sava/kms/google/GoogleKMSClientFactory.java)
 
 ### Configuration
 
