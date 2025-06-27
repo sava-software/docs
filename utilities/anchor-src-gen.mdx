@@ -6,49 +6,51 @@ description: "Generates utilities for interacting with on-chain programs and acc
 
 <Card title="GitHub Repository" icon="github" horizontal={true} href="https://github.com/sava-software/anchor-src-gen" />
 
-## [Dependencies](https://github.com/sava-software/anchor-src-gen/blob/main/src/main/java/module-info.java)
-  - java.net.http
-  - software.sava.json.iterator
-  - software.sava.core
-  - software.sava.rpc
+## [Dependencies](https://github.com/sava-software/anchor-src-gen/blob/main/anchor-src-gen/src/main/java/module-info.java)
+
+- java.net.http
+- software.sava.json.iterator
+- software.sava.core
+- software.sava.rpc
 
 ## Features With Examples
 
 ### Instructions
 
 - (De)Serialization:
-    - [Drift Program Instructions](https://github.com/sava-software/anchor-programs/blob/main/programs/src/main/java/software/sava/anchor/programs/drift/anchor/DriftProgram.java)
+  - [Drift Program Instructions](https://github.com/sava-software/anchor-programs/blob/main/anchor-programs/src/main/java/software/sava/anchor/programs/drift/anchor/DriftProgram.java)
 - Discriminators
 - Convenient auto-wiring
-  of [common accounts](https://github.com/sava-software/sava/blob/main/core/src/main/java/software/sava/core/accounts/SolanaAccounts.java) and optional account defaults.
-    - [GLAM Jupiter Swap](https://github.com/sava-software/anchor-programs/blob/63d7d1c734ec9d1c58949c6c1fb51fd5ee4281c4/programs/src/main/java/software/sava/anchor/programs/glam/anchor/GlamProgram.java#L1182)
+  of [common accounts](https://github.com/sava-software/sava/blob/main/sava-core/src/main/java/software/sava/core/accounts/SolanaAccounts.java)
+  and optional account defaults.
+  - [GLAM Jupiter Swap](https://github.com/sava-software/anchor-programs/blob/dea67bfe3a53a51db73edc842ef14400b0ae0030/anchor-programs/src/main/java/software/sava/anchor/programs/glam/anchor/GlamProtocolProgram.java#L1870)
 
 ### Defined Types
 
 - (De)Serialization
 - Structs:
-    - [Drift Order](https://github.com/sava-software/anchor-programs/blob/main/programs/src/main/java/software/sava/anchor/programs/drift/anchor/types/Order.java)
+  - [Drift Order](https://github.com/sava-software/anchor-programs/blob/main/anchor-programs/src/main/java/software/sava/anchor/programs/drift/anchor/types/Order.java)
 - Accounts:
-    * Discriminators with corresponding RPC memory compare filters:
-        * [GLAM State Account](https://github.com/sava-software/anchor-programs/blob/63d7d1c734ec9d1c58949c6c1fb51fd5ee4281c4/programs/src/main/java/software/sava/anchor/programs/glam/anchor/types/StateAccount.java#L37)
-    * PDA helpers:
-        * [GLAM PDAs](https://github.com/sava-software/anchor-programs/blob/main/programs/src/main/java/software/sava/anchor/programs/glam/anchor/GlamPDAs.java)
+  * Discriminators with corresponding RPC memory compare filters:
+    * [GLAM State Account](https://github.com/sava-software/anchor-programs/blob/dea67bfe3a53a51db73edc842ef14400b0ae0030/anchor-programs/src/main/java/software/sava/anchor/programs/glam/anchor/types/StateAccount.java#L37)
+  * PDA helpers:
+    * [GLAM PDAs](https://github.com/sava-software/anchor-programs/blob/main/anchor-programs/src/main/java/software/sava/anchor/programs/glam/anchor/GlamProtocolPDAs.java)
 - Enums:
-    * Simple:
-        * [Drift ExchangeStatus](https://github.com/sava-software/anchor-programs/blob/main/programs/src/main/java/software/sava/anchor/programs/drift/anchor/types/ExchangeStatus.java)
-    * With arbitrary associated data structures:
-        * [Jupiter Swap](https://github.com/sava-software/anchor-programs/blob/main/programs/src/main/java/software/sava/anchor/programs/jupiter/swap/anchor/types/Swap.java)
+  * Simple:
+    * [Drift ExchangeStatus](https://github.com/sava-software/anchor-programs/blob/main/anchor-programs/src/main/java/software/sava/anchor/programs/drift/anchor/types/ExchangeStatus.java)
+  * With arbitrary associated data structures:
+    * [Jupiter Swap](https://github.com/sava-software/anchor-programs/blob/main/anchor-programs/src/main/java/software/sava/anchor/programs/jupiter/swap/anchor/types/Swap.java)
 - Constants:
-    * [Meteora CLMM](https://github.com/sava-software/anchor-programs/blob/main/programs/src/main/java/software/sava/anchor/programs/meteora/dlmm/anchor/LbClmmConstants.java)
+  * [Meteora CLMM](https://github.com/sava-software/anchor-programs/blob/main/anchor-programs/src/main/java/software/sava/anchor/programs/meteora/dlmm/anchor/LbClmmConstants.java)
 - Events:
-    * [Drift NewUserRecord](https://github.com/sava-software/anchor-programs/blob/main/programs/src/main/java/software/sava/anchor/programs/drift/anchor/types/NewUserRecord.java)
+  * [Drift NewUserRecord](https://github.com/sava-software/anchor-programs/blob/main/anchor-programs/src/main/java/software/sava/anchor/programs/drift/anchor/types/NewUserRecord.java)
 - Errors:
-    * [Jupiter Swap Program Errors](https://github.com/sava-software/anchor-programs/blob/main/programs/src/main/java/software/sava/anchor/programs/jupiter/swap/anchor/JupiterError.java)
+  * [Jupiter Swap Program Errors](https://github.com/sava-software/anchor-programs/blob/main/anchor-programs/src/main/java/software/sava/anchor/programs/jupiter/swap/anchor/JupiterError.java)
 - [RPC Filters](https://solana.com/docs/rpc#filter-criteria):
-    - Memory compare filters:
-        - [Filter by Drift User authority or delegate](https://github.com/sava-software/anchor-programs/blob/63d7d1c734ec9d1c58949c6c1fb51fd5ee4281c4/programs/src/main/java/software/sava/anchor/programs/drift/anchor/types/User.java#L124)
-    - Data size filters
-        * [Filter by Drift User account size](https://github.com/sava-software/anchor-programs/blob/63d7d1c734ec9d1c58949c6c1fb51fd5ee4281c4/programs/src/main/java/software/sava/anchor/programs/drift/anchor/types/User.java#L90)
+  - Memory compare filters:
+    - [Filter by Drift User authority or delegate](https://github.com/sava-software/anchor-programs/blob/dea67bfe3a53a51db73edc842ef14400b0ae0030/anchor-programs/src/main/java/software/sava/anchor/programs/drift/anchor/types/User.java#L124)
+  - Data size filters
+    * [Filter by Drift User account size](https://github.com/sava-software/anchor-programs/blob/dea67bfe3a53a51db73edc842ef14400b0ae0030/anchor-programs/src/main/java/software/sava/anchor/programs/drift/anchor/types/User.java#L90)
 
 ## Generate Source
 
@@ -59,11 +61,10 @@ description: "Generates utilities for interacting with on-chain programs and acc
   dependencies hosted on GitHub Package Repository.
 </Info>
 
-Create a `gradle.properties` file in the project directory root or under `$HOME/.gradle/`.
 
-```properties
-gpr.user=GITHUB_USERNAME
-gpr.token=GITHUB_TOKEN
+```properties .gradle/gradle.properties
+savaGithubPackagesUsername=GITHUB_USERNAME
+savaGithubPackagesPassword=GITHUB_TOKEN
 ```
 
 ### Compile & Run
@@ -71,7 +72,8 @@ gpr.token=GITHUB_TOKEN
 Generated code will be placed under the `basePackageName` in the `sourceDirectory`.
 Export declarations will be added to module-info.java.
 
-The IDL for programs configured in the `programs` JSON file will be fetched concurrently in `numThreads` with a `baseDelayMillis` between requests.
+The IDL for programs configured in the `programs` JSON file will be fetched concurrently in `numThreads` with a
+`baseDelayMillis` between requests.
 
 #### Program Configuration
 
