@@ -4,18 +4,12 @@ description: "Add Sava to your Gradle or Maven build."
 mode: "wide"
 ---
 
-<Info>
-    Sava requires the [latest generally available JDK](https://www.oracle.com/java/technologies/downloads/).
-    This project will only maintain support against the latest version.
-    If you are interested in a long-term support release reach out to hello@sava.engineering.
-</Info>
-
 ## Build Configuration
 
 <Tabs>
   <Tab title="Gradle">
     <CodeGroup>
-      ```groovy build.gradle.kts
+      ```kotlin build.gradle.kts
       dependencies {
         implementation("software.sava:sava-core:$VERSION")
         implementation("software.sava:sava-rpc:$VERSION")
@@ -30,6 +24,9 @@ mode: "wide"
       ```
 
     </CodeGroup>
+
+    A <a href="https://github.com/sava-software/solana-version-catalog" target="_blank">Gradle Version Catalog and Platform (BOM)</a> is provided for each target version of Java.
+
   </Tab>
 
   <Tab title="Maven">
@@ -49,7 +46,6 @@ mode: "wide"
       ```
   </Tab>
 </Tabs>
-
 ---
 
 <Card title="Version Tags" icon="tags" horizontal={true} href="https://github.com/sava-software/sava/tags">
