@@ -85,20 +85,20 @@ programs will be fetched concurrently in `numThreads` with a `baseDelayMillis` b
 ]
 ```
 
-- `name` (string, required)
+- `name` (required)
   - Human-readable program name. Also used to derive defaults for other fields.
-- `package` (string, optional)
+- `package` (optional)
   - Java package suffix for this specific program. If omitted, it defaults to the lower-case form of `name`.
   - Final Java package for generated code: `<basePackageName>.<package>.anchor`
   - Example: with `--basePackageName=software.sava.anchor.gen` and `"package": "pyth.receiver"`, classes go under
     `software.sava.anchor.gen.pyth.receiver.anchor`.
-- `program` (string, required unless `idlURL` or `idlFile` is provided)
-  - Base58-encoded Solana program address (PublicKey). Used to compute the on-chain IDL address and to fetch the IDL
+- `program` (required unless `idlURL` or `idlFile` is provided)
+  - Base58-encoded Solana program address. Used to compute the onchain IDL address and to fetch the IDL
     when not using `idlURL` or `idlFile`.
-- `idlURL` (string, optional)
+- `idlURL` (optional)
   - HTTP(S) URL to fetch the program's IDL JSON. When provided, the generator fetches the IDL from this URL instead of
     the chain or file.
-- `idlFile` (string, optional)
+- `idlFile` (optional)
   - Path to a local IDL JSON file on disk. When provided (and `idlURL` is absent), the generator reads the IDL from this
     file.
 - `exportPackages` (boolean, optional)
