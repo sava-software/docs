@@ -1,0 +1,355 @@
+---
+title: "IDL Clients"
+sidebarTitle: "IDL Clients"
+description: "Generated source and convenient clients to (de)serialize instructions and accounts for common Solana programs."
+---
+
+<Card title="GitHub Repository" icon="github" horizontal={true} href="https://github.com/sava-software/idl-clients" />
+
+## [Dependencies](https://github.com/sava-software/idl-clients/blob/main/idl-clients-core/src/main/java/module-info.java)
+
+- java.net.http
+- org.bouncycastle.provider
+- systems.comodal.json_iterator
+- software.sava.core
+- software.sava.rpc
+
+## Usage Examples
+
+### Create a Program Client
+
+The [idl-clients-spl](https://github.com/sava-software/idl-clients/tree/main/idl-clients-spl) module, used throughout
+the examples below, provides `SPLClient` and `SPLAccountClient` for working with tokens, associated token accounts,
+stake accounts, address lookup tables, etc.
+
+```java
+var solanaAccounts = SolanaAccounts.MAIN_NET;
+var splClient = SPLClient.createClient(solanaAccounts);
+
+// Create an account-specific client bound to an owner and fee payer
+var owner = PublicKey.fromBase58Encoded(/* your public key */);
+var feePayer = AccountMeta.createFeePayer(/* fee payer public key */);
+var splAccountClient = splClient.createAccountClient(owner, feePayer);
+```
+
+### Typical Transaction Flow
+
+```java
+Signer signer = ...; // load private key
+var feePayer = AccountMeta.createFeePayer(signer.publicKey());
+var solanaAccounts = SolanaAccounts.MAIN_NET;
+
+try (var httpClient = HttpClient.newHttpClient()) {
+  var rpcClient = SolanaRpcClient.build()
+      .endpoint(SolanaNetwork.MAIN_NET.getEndpoint())
+      .httpClient(httpClient)
+      .createClient();
+  
+  List<Instruction> instructions = List.of(
+      ComputeBudgetUtil.MAX_COMPUTE_BUDGET_IX,
+      ComputeBudgetProgram.setComputeUnitPrice(
+          solanaAccounts.invokedComputeBudgetProgram(),
+          0
+      )
+      // TODO: Create and add relevant instructions
+  );
+  
+  var simulationTransaction = Transaction.createTx(feePayer, instructions);
+  var simulationFuture = rpcClient.simulateTransaction(simulationTransaction);
+  
+  // Apply a user-provided fee or fetch an estimate from a service such as Helius' Fee API.
+  var cuPriceIx = ComputeBudgetProgram.setComputeUnitPrice(
+      solanaAccounts.invokedComputeBudgetProgram(),
+      42
+  );
+  
+  var simulationResult = simulationFuture.join();
+  
+  var transaction = simulationTransaction
+      .replaceInstruction(0,
+          ComputeBudgetProgram.setComputeUnitLimit(
+              solanaAccounts.invokedComputeBudgetProgram(),
+              // CU usage can be dynamic and may need to be increased.
+              simulationResult.unitsConsumed().getAsInt()
+          )
+      )
+      .replaceInstruction(1, cuPriceIx);
+  transaction.setRecentBlockHash(simulationResult.replacementBlockHash().blockhash());
+  transaction.sign(signer);
+  
+  var base64Encoded = transaction.base64EncodeToString();
+  var sig = rpcClient.sendTransaction(base64Encoded).join();
+  System.out.println(sig);
+}
+```
+
+### Transfer SOL
+
+```java
+var transferTo = PublicKey.fromBase58Encoded(/* recipient */);
+var transferIx = splAccountClient.transferSolLamports(transferTo, 42);
+```
+
+### Associated Token Accounts
+
+```java
+var mint = PublicKey.fromBase58Encoded(/* token mint */);
+
+// Find the ATA for the standard Token Program
+ProgramDerivedAddress ata = splClient.findATA(owner, mint);
+
+// Create the ATA (idempotent - won't fail if it already exists)
+var tokenProgram = solanaAccounts.tokenProgram();
+Instruction createAtaIx = splAccountClient.createATAForOwnerFundedByFeePayer(
+    true, // idempotent
+    ata.publicKey(),
+    mint,
+    tokenProgram
+);
+```
+
+### Token Transfers
+
+```java
+var fromTokenAccount = PublicKey.fromBase58Encoded(/* source token account */);
+var toTokenAccount = PublicKey.fromBase58Encoded(/* destination token account */);
+var tokenMint = PublicKey.fromBase58Encoded(/* mint */);
+var invokedTokenProgram = solanaAccounts.invokedTokenProgram();
+long amount = 1_000_000;
+int decimals = 6;
+
+Instruction transferIx = splAccountClient.transferTokenChecked(
+    invokedTokenProgram,
+    fromTokenAccount,
+    toTokenAccount,
+    amount,
+    decimals,
+    tokenMint
+);
+```
+
+### Stake Accounts
+
+```java
+Signer signer = ...;
+var stakeAuthority = signer.publicKey();
+var feePayer = AccountMeta.createFeePayer(stakeAuthority);
+var validatorVoteAccount = PublicKey.fromBase58Encoded(/* vote account */);
+long stakeLamports = LamportDecimal.fromBigDecimal(BigDecimal.ONE).longValue();
+
+var solanaAccounts = SolanaAccounts.MAIN_NET;
+
+try (var httpClient = HttpClient.newHttpClient()) {
+  var rpcClient = SolanaRpcClient.build()
+      .endpoint(SolanaNetwork.MAIN_NET.getEndpoint())
+      .httpClient(httpClient)
+      .createClient();
+  
+  long minRent = rpcClient.getMinimumBalanceForRentExemption(StakeAccount.BYTES).join();
+  
+  var seed = ZonedDateTime.now(ZoneOffset.UTC).toString();
+  var stakeAccountPubKey = PublicKey.createOffCurveAccountWithAsciiSeed(
+      stakeAuthority,
+      seed,
+      solanaAccounts.stakeProgram()
+  ).publicKey();
+  
+  var createStakeAccountIx = SystemProgram.createAccountWithSeed(
+      solanaAccounts.invokedSystemProgram(),
+      stakeAuthority,     // payer
+      stakeAccountPubKey, // new account
+      stakeAuthority,     // base account (signer)
+      stakeAuthority,     // base
+      seed,
+      minRent + stakeLamports,
+      StakeAccount.BYTES,
+      solanaAccounts.stakeProgram()
+  );
+  
+  var authorized = new Authorized(stakeAuthority, stakeAuthority);
+  var lockup = new Lockup(new UnixTimestamp(0), new Epoch(0), PublicKey.NONE);
+  var initializeIx = SolanaStakeInterfaceProgram.initialize(
+      solanaAccounts.invokedStakeProgram(),
+      solanaAccounts,
+      stakeAccountPubKey,
+      authorized,
+      lockup
+  );
+  
+  var delegateStakeIx = SolanaStakeInterfaceProgram.delegateStake(
+      solanaAccounts.invokedStakeProgram(),
+      solanaAccounts,
+      stakeAccountPubKey,
+      validatorVoteAccount,
+      solanaAccounts.stakeConfig(),
+      stakeAuthority
+  );
+  
+  var instructions = List.of(createStakeAccountIx, initializeIx, delegateStakeIx);
+}
+```
+
+### Create & Extend Lookup Table
+
+```java
+var solanaAccounts = SolanaAccounts.MAIN_NET;
+var splClient = SPLClient.createClient(solanaAccounts);
+var splAccountClient = splClient.createAccountClient(owner, feePayer);
+
+var newAccounts = List.of(
+    PublicKey.fromBase58Encoded(""),
+    PublicKey.fromBase58Encoded(""),
+    PublicKey.fromBase58Encoded("")
+);
+
+long recentSlot = rpcClient.getSlot().join();
+
+var lookupTablePDA = splAccountClient.findLookupTableAddress(recentSlot);
+
+var createLookupTableIx = splAccountClient.createLookupTable(lookupTablePDA, recentSlot);
+var extendTableIx = splAccountClient.extendLookupTable(lookupTablePDA.publicKey(), newAccounts);
+
+var instructions = List.of(createLookupTableIx, extendTableIx);
+```
+
+### Durable Nonce Transactions
+
+<Info>
+  See the [official Solana documentation](https://solana.com/developers/courses/offline-transactions/durable-nonces) for context on durable nonce transactions.
+</Info>
+
+The `SystemProgram` and `NonceAccount` types under `software.sava.idl.clients.spl.system` provide everything needed
+to create, initialize, and consume durable nonce accounts without depending on `solana-programs`.
+
+#### Create & Initialize Nonce Account
+
+```java
+Signer signer = ...;
+var rpcEndpoint = SolanaNetwork.MAIN_NET.getEndpoint();
+
+try (var httpClient = HttpClient.newHttpClient()) {
+  var rpcClient = SolanaRpcClient.build()
+      .endpoint(rpcEndpoint)
+      .httpClient(httpClient)
+      .createClient();
+  
+  var blockHashFuture = rpcClient.getLatestBlockHash();
+  var minRentFuture = rpcClient.getMinimumBalanceForRentExemption(NonceAccount.BYTES);
+  
+  var solanaAccounts = SolanaAccounts.MAIN_NET;
+  var seed = "nonce";
+  var nonceAccountWithSeed = PublicKey.createOffCurveAccountWithAsciiSeed(
+      signer.publicKey(),
+      seed,
+      solanaAccounts.systemProgram()
+  );
+  
+  var initializeNonceAccountIx = SystemProgram.initializeNonceAccount(
+      solanaAccounts.invokedSystemProgram(),
+      solanaAccounts,
+      nonceAccountWithSeed.publicKey(),
+      signer.publicKey()
+  );
+
+  System.out.format("""
+      Fetching block hash and minimum rent to create nonce account %s with authority %s.
+      
+      """,
+    nonceAccountWithSeed.publicKey(),
+    signer.publicKey()
+  );
+
+  long minRent = minRentFuture.join();
+  var createNonceAccountIx = SystemProgram.createAccountWithSeed(
+      solanaAccounts.invokedSystemProgram(),
+      signer.publicKey(),               // payer
+      nonceAccountWithSeed.publicKey(), // new account
+      signer.publicKey(),               // base account (signer)
+      signer.publicKey(),               // base
+      seed,
+      minRent,
+      NonceAccount.BYTES,
+      solanaAccounts.systemProgram()
+  );
+  
+  var instructions = List.of(createNonceAccountIx, initializeNonceAccountIx);
+  var transaction = Transaction.createTx(signer.publicKey(), instructions);
+  
+  var blockHash = blockHashFuture.join().blockHash();
+  transaction.setRecentBlockHash(blockHash);
+  transaction.sign(signer);
+  
+  var base64Encoded = transaction.base64EncodeToString();
+  var sendTransactionFuture = rpcClient.sendTransaction(base64Encoded);
+  System.out.format("""
+      Creating nonce account %s
+      https://explorer.solana.com/tx/%s
+      
+      """,
+    nonceAccountWithSeed.publicKey(),
+    transaction.getBase58Id()
+  );
+  
+  var sig = sendTransactionFuture.join();
+  System.out.format("""
+      Confirmed transaction %s
+      https://solscan.io/account/%s
+      
+      """,
+    sig,
+    nonceAccountWithSeed.publicKey()
+  );
+  
+  var nonceAccountInfo = rpcClient.getAccountInfo(nonceAccountWithSeed.publicKey()).join();
+  var nonceAccount = NonceAccount.read(nonceAccountInfo);
+  System.out.println(nonceAccount);
+}
+```
+
+#### Create & Send Durable Nonce Transaction
+
+```java
+Signer signer = ...;
+var nonceAccountKey = PublicKey.fromBase58Encoded("");
+var sendToKey = PublicKey.fromBase58Encoded("");
+var transferSOL = new BigDecimal("0.0");
+
+var solanaAccounts = SolanaAccounts.MAIN_NET;
+var rpcEndpoint = SolanaNetwork.MAIN_NET.getEndpoint();
+try (var httpClient = HttpClient.newHttpClient()) {
+  var rpcClient = SolanaRpcClient.build()
+      .endpoint(rpcEndpoint)
+      .httpClient(httpClient)
+      .createClient();
+  
+  var nonceAccountInfo = rpcClient.getAccountInfo(nonceAccountKey).join();
+  var nonceAccount = NonceAccount.read(nonceAccountInfo);
+  System.out.println(nonceAccount);
+  
+  var advanceNonceIx = nonceAccount.advanceNonceAccount(solanaAccounts);
+  var transferIx = SystemProgram.transferSol(
+      solanaAccounts.invokedSystemProgram(),
+      signer.publicKey(),
+      sendToKey,
+      LamportDecimal.fromBigDecimal(transferSOL).longValue()
+  );
+  
+  var instructions = List.of(advanceNonceIx, transferIx);
+  var transaction = Transaction.createTx(signer.publicKey(), instructions);
+  nonceAccount.setNonce(transaction);
+  transaction.sign(signer);
+  
+  var base64Encoded = transaction.base64EncodeToString();
+  var sendTransactionFuture = rpcClient.sendTransaction(base64Encoded);
+  System.out.format("""
+        Transferring %s SOL from %s to %s.
+        https://explorer.solana.com/tx/%s
+        
+        """,
+      transferSOL.toPlainString(), signer.publicKey(), sendToKey, transaction.getBase58Id()
+  );
+  
+  var sig = sendTransactionFuture.join();
+  System.out.println("Confirmed transaction "+ sig);
+}
+```

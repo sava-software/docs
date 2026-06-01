@@ -1,0 +1,13 @@
+# Ignore everything by default
+*
+
+# Then allow only files relevant to mint/mintlify
+!docs.json
+!mint.json
+!favicon.svg
+!*.mdx
+!images/
+!logo/
+!about/
+!libraries/
+!utilities/

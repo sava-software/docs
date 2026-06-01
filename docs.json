@@ -22,31 +22,20 @@
         "pages": [
           "libraries/core",
           "libraries/rpc",
-          "libraries/programs",
-          "libraries/anchor-programs",
-          "libraries/web2",
-          {
-            "group": "Ravina",
-            "pages": [
-              "libraries/ravina/core",
-              "libraries/ravina/kms",
-              "libraries/ravina/solana"
-            ]
-          }
+          "libraries/idl-clients"
         ]
       },
       {
         "group": "Utilities",
         "pages": [
-          "utilities/anchor-src-gen",
           "utilities/vanity"
         ]
       },
       {
-        "group": "About",
+        "group": "Project",
         "pages": [
-          "about/project",
-          "about/spotlight"
+          "project/contact",
+          "project/spotlight"
         ]
       }
     ]
@@ -73,13 +62,13 @@
       "og:site_name": "Solana Java SDK",
       "og:title": "Sava | Solana Java SDK",
       "og:url": "https://sava.software/",
-      "og:description": "Sava is a Java SDK for building Solana services.",
-      "og:image": "/sava-preview.jpg",
+      "og:description": "Sava is a Java SDK for building on Solana.",
+      "og:image": "/images/sava-preview.jpg",
       "og:image:width": "1200",
       "og:image:height": "630",
       "twitter:title": "Sava | Solana Java SDK",
-      "twitter:description": "Sava is a Java SDK for building Solana services.",
-      "twitter:image": "/sava-preview.jpg",
+      "twitter:description": "Sava is a Java SDK for building on Solana.",
+      "twitter:image": "/images/sava-preview.jpg",
       "twitter:site": "@sava_software"
     },
     "indexing": "all"

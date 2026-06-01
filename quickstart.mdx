@@ -6,6 +6,10 @@ mode: "wide"
 
 ## Build Configuration
 
+<Info>
+  Sava targets Java 25. Ensure you have a compatible JDK installed before adding Sava to your build.
+</Info>
+
 <Tabs>
   <Tab title="Gradle">
     <CodeGroup>
@@ -24,8 +28,6 @@ mode: "wide"
       ```
 
     </CodeGroup>
-
-    A <a href="https://github.com/sava-software/solana-version-catalog" target="_blank">Gradle Version Catalog and Platform (BOM)</a> is provided for each target version of Java.
 
   </Tab>
 
@@ -46,8 +48,12 @@ mode: "wide"
       ```
   </Tab>
 </Tabs>
----
 
-<Card title="Version Tags" icon="tags" horizontal={true} href="https://github.com/sava-software/sava/tags">
-  Latest release tags
-</Card>
+<Tip>
+  A <a href="https://github.com/sava-software/solana-version-catalog" target="_blank">Gradle Version Catalog and Platform (BOM)</a> is provided for each target version of Java.
+</Tip>
+
+<Tip>
+  Signed libraries are published to both <a href="https://central.sonatype.com/search?namespace=software.sava" target="_blank">Maven Central</a> and the GitHub Package Repository.
+</Tip>
+---

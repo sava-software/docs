@@ -20,10 +20,10 @@ See the official Solana docs for context on each [HTTP RPC method.](https://sola
 
 ```java
 try (var httpClient = HttpClient.newHttpClient()) {
-    var rpcClient = SolanaRpcClient.createClient(
-        SolanaNetwork.MAIN_NET.getEndpoint(),
-        httpClient
-    );
+    var rpcClient = SolanaRpcClient.build()
+        .endpoint(SolanaNetwork.MAIN_NET.getEndpoint())
+        .httpClient(httpClient)
+        .createClient();
 }
 ```
 
