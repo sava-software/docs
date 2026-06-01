@@ -22,16 +22,16 @@ savaGithubPackagesPassword=GITHUB_TOKEN
 ## Compile
 
 ```shell
-./vanity/compile.sh
+./sava-vanity/compile.sh
 ```
 
 ## Run
 
 ```shell
-./vanity/genKeys.sh --prefix="abc"
+./sava-vanity/genKeys.sh --prefix="abc"
 ```
 
-## Args
+### Args
 
 * A `prefix` and/or `suffix` must be provided.
 * `numThreads` defaults to half of the systems CPU's.
@@ -48,9 +48,10 @@ savaGithubPackagesPassword=GITHUB_TOKEN
 - screen=0
 - [nt | numThreads]=
 - [nk | numKeys]=1
+- [kf | keyFormat]="base64KeyPair"
 - [cf | checkFound]=131072
 - [ld | logDelay]="5S"
-- [o | outDir]='.keys'
+- [o  | outDir]='.keys'
 - [sv | sigVerify]=false
 
 ### Prefix
