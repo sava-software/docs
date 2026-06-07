@@ -128,11 +128,10 @@ export MY_VANITY_PASSWORD="..."
 #### Key Derivation (KDF)
 
 The password is run through a key derivation function before it is used to encrypt the secret. The
-`kdf` flag selects the function and the secret is always encrypted with AES-256/GCM (already safe
-against quantum brute force via Grover's algorithm). The KDF parameters can be customized; when they
-are omitted, hardened defaults are used.
+`kdf` flag selects the function and the secret is always encrypted with AES-256/GCM. The KDF parameters can be
+customized; when they are omitted, hardened defaults are used.
 
-- [kdf]=pbkdf2 — `pbkdf2` (`PBKDF2WithHmacSHA512`, the default) or `argon2id` (memory-hard).
+- [kdf]=argon2id — `argon2id` (memory-hard, the default) or `pbkdf2` (`PBKDF2WithHmacSHA512`).
 - [kit | kdfIterations] — number of iterations. Applies to both `pbkdf2` and `argon2id`.
 - [kmem | kdfMemoryKB] — Argon2id memory cost in KiB. Only valid with `kdf=argon2id`.
 - [kpar | kdfParallelism] — Argon2id parallelism (lanes). Only valid with `kdf=argon2id`.
@@ -146,14 +145,14 @@ the JVM heap to `(kdfMemoryKB × numThreads) + 128 MiB` so concurrent derivation
 the default heap. Passing your own `--jvm` args disables this auto-sizing.
 
 ```shell
-# Use Argon2id with the hardened defaults.
-./sava-vanity/genKeys.sh --prefix="abc" --password --kdf=argon2id
+# Use Argon2id (the default) with the hardened defaults.
+./sava-vanity/genKeys.sh --prefix="abc" --password
 
 # Use Argon2id with fully customized parameters (all three are required).
 ./sava-vanity/genKeys.sh --prefix="abc" --password --kdf=argon2id \
   --kdfMemoryKB=262144 --kdfParallelism=4 --kdfIterations=3
 
-# Customize only the PBKDF2 iteration count.
+# Opt out of Argon2id and customize only the PBKDF2 iteration count.
 ./sava-vanity/genKeys.sh --prefix="abc" --password --kdf=pbkdf2 --kdfIterations=600000
 ```
 
