@@ -14,6 +14,25 @@ description: "Generated source and convenient clients to (de)serialize instructi
 - software.sava.core
 - software.sava.rpc
 
+## Supported Programs
+
+Clients are generated from each program's IDL, providing typed instruction builders and
+account (de)serialization, plus hand-written convenience clients where useful.
+
+| Module               | Programs                                                                                                                                                                       |
+|----------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `idl-clients-spl`    | Token, Token-2022, Associated Token Account, System, Stake, Stake Pool, Address Lookup Table, Memo, Compute Budget, signature verification precompiles, Attestation Service |
+| `idl-clients-bundle` | Jupiter, Kamino, Marginfi, Marinade, Metaplex, Meteora, Orca, Phoenix, Squads, CCTP, Loopscale, Neutral Trade, Pyth, Switchboard, Wormhole                                     |
+
+## Build Configuration
+
+```kotlin build.gradle.kts
+dependencies {
+  implementation("software.sava:idl-clients-spl:$VERSION")
+  implementation("software.sava:idl-clients-bundle:$VERSION")
+}
+```
+
 ## Usage Examples
 
 ### Create a Program Client
@@ -86,6 +105,7 @@ try (var httpClient = HttpClient.newHttpClient()) {
 ### Transfer SOL
 
 ```java
+// splAccountClient, owner & feePayer from "Create a Program Client" above.
 var transferTo = PublicKey.fromBase58Encoded(/* recipient */);
 var transferIx = splAccountClient.transferSolLamports(transferTo, 42);
 ```
@@ -158,8 +178,8 @@ try (var httpClient = HttpClient.newHttpClient()) {
       solanaAccounts.invokedSystemProgram(),
       stakeAuthority,     // payer
       stakeAccountPubKey, // new account
-      stakeAuthority,     // base account (signer)
-      stakeAuthority,     // base
+      stakeAuthority,     // base account, must sign
+      stakeAuthority,     // base key the seed derives from
       seed,
       minRent + stakeLamports,
       StakeAccount.BYTES,
@@ -192,6 +212,7 @@ try (var httpClient = HttpClient.newHttpClient()) {
 ### Create & Extend Lookup Table
 
 ```java
+// rpcClient, owner & feePayer from the examples above.
 var solanaAccounts = SolanaAccounts.MAIN_NET;
 var splClient = SPLClient.createClient(solanaAccounts);
 var splAccountClient = splClient.createAccountClient(owner, feePayer);
@@ -217,9 +238,6 @@ var instructions = List.of(createLookupTableIx, extendTableIx);
 <Info>
   See the [official Solana documentation](https://solana.com/developers/courses/offline-transactions/durable-nonces) for context on durable nonce transactions.
 </Info>
-
-The `SystemProgram` and `NonceAccount` types under `software.sava.idl.clients.spl.system` provide everything needed
-to create, initialize, and consume durable nonce accounts without depending on `solana-programs`.
 
 #### Create & Initialize Nonce Account
 
@@ -251,14 +269,6 @@ try (var httpClient = HttpClient.newHttpClient()) {
       signer.publicKey()
   );
 
-  System.out.format("""
-      Fetching block hash and minimum rent to create nonce account %s with authority %s.
-      
-      """,
-    nonceAccountWithSeed.publicKey(),
-    signer.publicKey()
-  );
-
   long minRent = minRentFuture.join();
   var createNonceAccountIx = SystemProgram.createAccountWithSeed(
       solanaAccounts.invokedSystemProgram(),
@@ -280,25 +290,8 @@ try (var httpClient = HttpClient.newHttpClient()) {
   transaction.sign(signer);
   
   var base64Encoded = transaction.base64EncodeToString();
-  var sendTransactionFuture = rpcClient.sendTransaction(base64Encoded);
-  System.out.format("""
-      Creating nonce account %s
-      https://explorer.solana.com/tx/%s
-      
-      """,
-    nonceAccountWithSeed.publicKey(),
-    transaction.getBase58Id()
-  );
-  
-  var sig = sendTransactionFuture.join();
-  System.out.format("""
-      Confirmed transaction %s
-      https://solscan.io/account/%s
-      
-      """,
-    sig,
-    nonceAccountWithSeed.publicKey()
-  );
+  var sig = rpcClient.sendTransaction(base64Encoded).join();
+  System.out.println("https://explorer.solana.com/tx/" + sig);
   
   var nonceAccountInfo = rpcClient.getAccountInfo(nonceAccountWithSeed.publicKey()).join();
   var nonceAccount = NonceAccount.read(nonceAccountInfo);
@@ -340,16 +333,7 @@ try (var httpClient = HttpClient.newHttpClient()) {
   transaction.sign(signer);
   
   var base64Encoded = transaction.base64EncodeToString();
-  var sendTransactionFuture = rpcClient.sendTransaction(base64Encoded);
-  System.out.format("""
-        Transferring %s SOL from %s to %s.
-        https://explorer.solana.com/tx/%s
-        
-        """,
-      transferSOL.toPlainString(), signer.publicKey(), sendToKey, transaction.getBase58Id()
-  );
-  
-  var sig = sendTransactionFuture.join();
-  System.out.println("Confirmed transaction "+ sig);
+  var sig = rpcClient.sendTransaction(base64Encoded).join();
+  System.out.println("https://explorer.solana.com/tx/" + sig);
 }
 ```

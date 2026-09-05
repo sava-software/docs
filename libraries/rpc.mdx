@@ -10,6 +10,19 @@ description: 'HTTP and WebSocket JSON RPC Clients.'
   - software.sava.json.iterator
   - software.sava.core
 
+## Features
+
+* Every active [HTTP RPC method](https://solana.com/docs/rpc/http) with typed response records.
+* [WebSocket subscriptions](https://solana.com/docs/rpc/websocket) which automatically
+  re-subscribe on re-connection, including a
+  [generic passthrough](#provider-specific-subscriptions) for provider-specific methods.
+* Typed, sealed error hierarchies: every
+  [TransactionError](https://github.com/sava-software/sava/blob/main/sava-rpc/src/main/java/software/sava/rpc/json/http/response/TransactionError.java)
+  and [InstructionError](https://github.com/sava-software/sava/blob/main/sava-rpc/src/main/java/software/sava/rpc/json/http/response/IxError.java)
+  variant and each [custom JSON-RPC error code](https://github.com/sava-software/sava/blob/main/sava-rpc/src/main/java/software/sava/rpc/json/http/response/RpcCustomError.java)
+  parses to its own type, so error handling is a switch, not string matching.
+* Asynchronous by default, every request returns a `CompletableFuture`.
+
 ## HTTP
 
 <Info>
@@ -24,6 +37,7 @@ try (var httpClient = HttpClient.newHttpClient()) {
         .endpoint(SolanaNetwork.MAIN_NET.getEndpoint())
         .httpClient(httpClient)
         .createClient();
+    // The examples below assume an rpcClient within this scope.
 }
 ```
 
@@ -31,7 +45,7 @@ try (var httpClient = HttpClient.newHttpClient()) {
 
 ```java
 var accountInfo = rpcClient.getAccountInfo(
-    PublicKey.fromBase58Encoded("6T6vqb3VykNToz4sqY5C29Psb8iNUuVZPAqJXbAgorVF"),
+    PublicKey.fromBase58Encoded("6T6vqb3VykNToz4sqY5C29Psb8iNUuVZPAqJXbAgorVF")
 ).join();
 
 byte[] tableData = accountInfo.data();
@@ -133,4 +147,23 @@ webSocket.programSubscribe(addressLookupTableProgram, accountInfo -> {
     var table = AddressLookupTable.read(accountInfo.pubKey(), accountInfo.data());
     System.out.println(table);
 });
+```
+
+### Provider Specific Subscriptions
+
+Subscription methods which are not part of the standard Solana API, or not supported by
+public RPC infrastructure, are reachable via the generic `subscribe` passthrough. You
+provide the method names, request parameters JSON, and a response parser; subscriptions
+are replayed if the connection is re-established. See
+[HeliusRpcWebsocket](https://github.com/sava-software/helius-sdk)
+for a complete example wrapping Helius' `transactionSubscribe`.
+
+```java
+webSocket.subscribe(
+    "transactionSubscribe", "transactionUnsubscribe", "transactionNotification",
+    subscriptionKey,
+    paramsJson,
+    TransactionNotification::parse,
+    notification -> System.out.println(notification)
+);
 ```

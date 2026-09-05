@@ -12,18 +12,77 @@ description: "Common Solana Cryptography & Serialization Utilities."
 
 * [Transaction (de)serialization](#transaction-deserialization)
 * [Account Types:](https://github.com/sava-software/sava/tree/main/sava-core/src/main/java/software/sava/core/accounts)
-  * Token, Mint, Token2022 and extensions
+  * Token, Mint, [Token-2022 and all of its extensions](#token-2022-extensions)
   * Address Lookup Tables
-* [Common collection of main-net addresses](https://github.com/sava-software/sava/tree/main/sava-core/src/main/java/software/sava/core/accounts/SolanaAccounts.java)
+* [Common collection of main-net addresses](#solana-accounts)
 * Ed25519 [public](https://github.com/sava-software/sava/tree/main/sava-core/src/main/java/software/sava/core/accounts/PublicKey.java) and [private](https://github.com/sava-software/sava/tree/main/sava-core/src/main/java/software/sava/core/accounts/Signer.java) keys
-* Program derived addresses
+* [Program derived addresses](#program-derived-addresses)
 * [Encoding:](https://github.com/sava-software/sava/tree/main/sava-core/src/main/java/software/sava/core/encoding)
   * [Base58](https://github.com/sava-software/sava/tree/main/sava-core/src/main/java/software/sava/core/encoding/Base58.java)
   * [Hex](https://github.com/sava-software/sava/tree/main/sava-core/src/main/java/software/sava/core/encoding/Jex.java)
   * [Little Endian Numbers](https://github.com/sava-software/sava/tree/main/sava-core/src/main/java/software/sava/core/encoding/ByteUtil.java)
   * [Compact u16](https://github.com/sava-software/sava/tree/main/sava-core/src/main/java/software/sava/core/encoding/CompactU16Encoding.java)
 
+## Solana Accounts
+
+[SolanaAccounts](https://github.com/sava-software/sava/tree/main/sava-core/src/main/java/software/sava/core/accounts/SolanaAccounts.java)
+provides the native/builtin program IDs, common SPL program IDs, and sysvar addresses,
+each with pre-constructed read/invoked `AccountMeta` variants.
+
+```java
+var accounts = SolanaAccounts.MAIN_NET;
+var tokenProgram = accounts.invokedTokenProgram();
+var clock = accounts.readClockSysVar();
+```
+
+For a fork or custom deployment, use
+[SolanaAccountsBuilder](https://github.com/sava-software/sava/tree/main/sava-core/src/main/java/software/sava/core/accounts/SolanaAccountsBuilder.java)
+and override only the addresses which differ; every field defaults to its main-net value.
+
+```java
+var accounts = SolanaAccountsBuilder.builder()
+    .tokenProgram("<forkedTokenProgram>")
+    .create();
+```
+
+## Token-2022 Extensions
+
+[Token2022](https://github.com/sava-software/sava/tree/main/sava-core/src/main/java/software/sava/core/accounts/token/Token2022.java)
+and [Token2022Account](https://github.com/sava-software/sava/tree/main/sava-core/src/main/java/software/sava/core/accounts/token/Token2022Account.java)
+parse every [Token-2022 extension](https://github.com/sava-software/sava/tree/main/sava-core/src/main/java/software/sava/core/accounts/token/extensions)
+into a sealed type hierarchy. Extensions released after your version of sava are retained
+as `UnknownTokenExtension` with their on-chain type value and raw data, so parsing never
+breaks when new extensions ship.
+
+```java
+var token2022 = Token2022.read(mintAddress, accountData);
+for (var extension : token2022.tokenExtensions()) {
+  switch (extension) {
+    case TransferFeeConfig(_, _, _, _, TransferFee(_, long maxFee, int feeBasisPoints)) ->
+        System.out.format("Transfer fee: %d bps, max %d%n", feeBasisPoints, maxFee);
+    case TokenMetadata metadata -> System.out.println(metadata.name());
+    case UnknownTokenExtension(int type, byte[] data) ->
+        System.out.println("New extension released, type " + type);
+    default -> {
+    }
+  }
+}
+```
+
+## Program Derived Addresses
+
+```java
+var programId = PublicKey.fromBase58Encoded("<programId>");
+var seeds = List.of("state".getBytes(US_ASCII), owner.toByteArray());
+ProgramDerivedAddress pda = PublicKey.findProgramAddress(seeds, programId);
+```
+
 ## Private Key Parsing
+
+<Info>
+  `JsonIterator` is provided by the transitive
+  [json-iterator](https://github.com/comodal/json-iterator) dependency of `sava-rpc`.
+</Info>
 
 ### Usage
 
@@ -99,7 +158,7 @@ byte[] legacyTransactionData = ...;
 var skeleton = TransactionSkeleton.deserializeSkeleton(legacyTransactionData);
 AccountMeta[] accounts = skeleton.parseAccounts();
 Instruction[] instructions = skeleton.parseLegacyInstructions();
-Transaction transaction = skeleton.createTransaction()
+Transaction transaction = skeleton.createTransaction();
 ```
 
 ### Versioned
