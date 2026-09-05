@@ -18,6 +18,12 @@
         ]
       },
       {
+        "group": "Guides",
+        "pages": [
+          "guides/transactions"
+        ]
+      },
+      {
         "group": "Libraries",
         "pages": [
           "libraries/core",
@@ -29,6 +35,12 @@
         "group": "Utilities",
         "pages": [
           "utilities/vanity"
+        ]
+      },
+      {
+        "group": "Releases",
+        "pages": [
+          "releases/25.11.0"
         ]
       },
       {

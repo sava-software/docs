@@ -16,11 +16,11 @@ description: 'HTTP and WebSocket JSON RPC Clients.'
 * [WebSocket subscriptions](https://solana.com/docs/rpc/websocket) which automatically
   re-subscribe on re-connection, including a
   [generic passthrough](#provider-specific-subscriptions) for provider-specific methods.
-* Typed, sealed error hierarchies: every
+* Typed, sealed error hierarchies: known
   [TransactionError](https://github.com/sava-software/sava/blob/main/sava-rpc/src/main/java/software/sava/rpc/json/http/response/TransactionError.java)
   and [InstructionError](https://github.com/sava-software/sava/blob/main/sava-rpc/src/main/java/software/sava/rpc/json/http/response/IxError.java)
-  variant and each [custom JSON-RPC error code](https://github.com/sava-software/sava/blob/main/sava-rpc/src/main/java/software/sava/rpc/json/http/response/RpcCustomError.java)
-  parses to its own type, so error handling is a switch, not string matching.
+  variants and supported [custom JSON-RPC error codes](https://github.com/sava-software/sava/blob/main/sava-rpc/src/main/java/software/sava/rpc/json/http/response/RpcCustomError.java)
+  parse to their own types, with `Unknown` fallbacks for unrecognized variants or codes.
 * Asynchronous by default, every request returns a `CompletableFuture`.
 
 ## HTTP
@@ -90,6 +90,79 @@ var accountInfoList = accountInfoFuture.join();
 accountInfoList.stream().map(AccountInfo::data).forEach(System.out::println);
 System.out.format("Retrieved %d tables which are active and frozen.%n", accountInfoList.size());
 ```
+
+### Fetch Transactions & Blocks
+
+Since 25.11.0, the built-in client automatically requests
+`maxSupportedTransactionVersion: 1` for `getTransaction` and for `getBlock` with
+`BlockTxDetails.full`. Both requests use Base64 transaction bytes. Other block-detail
+modes omit the version ceiling; request `full` to retrieve serialized transactions.
+The destination node and cluster still determine which transaction versions are available.
+
+Given a transaction `signature`, inspect its wire version and v1 configuration:
+
+```java
+var tx = rpcClient.getTransaction(signature).join();
+if (tx != null) {
+    var skeleton = tx.skeleton();
+    if (skeleton != null) {
+        System.out.println("Version: " + skeleton.version());
+        if (skeleton.version() == 1) {
+            System.out.println("Priority fee (lamports): " + skeleton.priorityFeeLamports());
+            System.out.println("Compute-unit limit: " + skeleton.computeUnitLimit());
+            System.out.println("Account-data limit (bytes): " + skeleton.accountDataSizeLimit());
+            System.out.println("Heap request (bytes): " + skeleton.heapSize());
+        }
+    }
+}
+```
+
+For a block `slot`, each `BlockTx` also exposes `skeleton()`:
+
+```java
+var block = rpcClient.getBlock(slot, BlockTxDetails.full).join();
+if (block != null) {
+    for (var entry : block.transactions()) {
+        var skeleton = entry.skeleton();
+        if (skeleton != null) {
+            System.out.println(skeleton.id() + ": version " + skeleton.version());
+        }
+    }
+}
+```
+
+`version()` is `1` for v1, `0` for v0, and negative for legacy. Both skeleton helpers
+deserialize on each call and return `null` when transaction bytes are absent or empty.
+`BlockTx` reads the version from those bytes through its skeleton. Execution results,
+such as the fee and consumed compute units, are available through `meta()` when present.
+
+### Version Errors & Submission Results
+
+These failures describe different stages of a request:
+
+| Situation | Typed result |
+| --- | --- |
+| A fetched transaction exceeds the requesting client's version ceiling | `JsonRpcException` with code `-32015` and `RpcCustomError.UnsupportedTransactionVersion` |
+| Simulation rejects a version unsupported by the destination runtime | `TxSimulation.error()` is `TransactionError.UnsupportedVersion` |
+| Submission preflight rejects the transaction | `JsonRpcException` with code `-32002` and `RpcCustomError.SendTransactionPreflightFailure`; inspect its `simulation().error()` |
+
+For a JSON-RPC error, `join()` throws a `CompletionException` whose cause is a
+`JsonRpcException`. Preserve an `Unknown` case when handling error variants.
+
+A successful `sendTransaction` response supplies a transaction signature. Check its
+confirmation status and execution error afterward; skipping preflight can return a
+signature even when the runtime will reject the transaction. See the
+[transaction lifecycle guide](/guides/transactions) for building, simulation, signing,
+and submission, including how to adjust v1 limits after simulation.
+
+### Request Encodings
+
+In 25.11.0, `RpcEncoding.base58` was removed. Use `RpcEncoding.base64`, or
+`RpcEncoding.base64_zstd` (`base64+zstd`) for account requests that support compression.
+`RpcEncoding.parseEncoding` returns `null` for `base58`; existing incoming Base58
+account-data decoding remains supported. Transaction fetch, simulation, and submission
+use Base64. Account parsing remains client-side through the typed account factories;
+`jsonParsed` is intentionally absent. See the [25.11.0 migration notes](/releases/25.11.0).
 
 ## WebSocket
 

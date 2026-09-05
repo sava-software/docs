@@ -51,7 +51,9 @@ var feePayer = AccountMeta.createFeePayer(/* fee payer public key */);
 var splAccountClient = splClient.createAccountClient(owner, feePayer);
 ```
 
-### Typical Transaction Flow
+<a id="typical-transaction-flow"></a>
+
+### Typical Legacy Transaction Flow
 
 ```java
 Signer signer = ...; // load private key
@@ -101,6 +103,11 @@ try (var httpClient = HttpClient.newHttpClient()) {
   System.out.println(sig);
 }
 ```
+
+`TxBuilder` currently builds only v1 transactions and accepts the same generated
+`Instruction` objects.
+See the [transaction guide](/guides/transactions) for v1 construction and signing. The
+mainnet examples on this page continue to use the supported legacy transaction factories.
 
 ### Transfer SOL
 

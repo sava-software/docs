@@ -10,7 +10,7 @@ description: "Common Solana Cryptography & Serialization Utilities."
 
 ## Features
 
-* [Transaction (de)serialization](#transaction-deserialization)
+* [Transaction construction and signing](/guides/transactions), plus [legacy, v0, and v1 deserialization](#transaction-deserialization)
 * [Account Types:](https://github.com/sava-software/sava/tree/main/sava-core/src/main/java/software/sava/core/accounts)
   * Token, Mint, [Token-2022 and all of its extensions](#token-2022-extensions)
   * Address Lookup Tables
@@ -49,10 +49,14 @@ var accounts = SolanaAccountsBuilder.builder()
 
 [Token2022](https://github.com/sava-software/sava/tree/main/sava-core/src/main/java/software/sava/core/accounts/token/Token2022.java)
 and [Token2022Account](https://github.com/sava-software/sava/tree/main/sava-core/src/main/java/software/sava/core/accounts/token/Token2022Account.java)
-parse every [Token-2022 extension](https://github.com/sava-software/sava/tree/main/sava-core/src/main/java/software/sava/core/accounts/token/extensions)
-into a sealed type hierarchy. Extensions released after your version of sava are retained
-as `UnknownTokenExtension` with their on-chain type value and raw data, so parsing never
-breaks when new extensions ship.
+parse known [Token-2022 extensions](https://github.com/sava-software/sava/tree/main/sava-core/src/main/java/software/sava/core/accounts/token/extensions)
+into a sealed type hierarchy. Unrecognized type IDs in well-formed TLV data are retained
+as `UnknownTokenExtension` with their on-chain type value and raw data. Truncated TLV
+values, mismatched fixed-size extension lengths, and duplicate extension IDs are rejected.
+
+`ordinal()` exposes the stable on-chain type ID. In 25.11.0, use `tokenExtensions()` and
+concrete types in place of the removed enum/map accessors; see the
+[Token-2022 migration notes](/releases/25.11.0#token-2022-extensions).
 
 ```java
 var token2022 = Token2022.read(mintAddress, accountData);
@@ -161,7 +165,9 @@ Instruction[] instructions = skeleton.parseLegacyInstructions();
 Transaction transaction = skeleton.createTransaction();
 ```
 
-### Versioned
+<a id="versioned"></a>
+
+### v0
 
 ```java
 byte[] v0TransactionData = ...;
@@ -176,6 +182,29 @@ Instruction[] instructions = skeleton.parseInstructions(accounts);
 Transaction transaction = skeleton.createTransaction(instructions, lookupTable);
 ```
 
+### v1
+
+The same deserializer recognizes v1. All v1 accounts are carried directly in the
+message, so no address lookup tables need to be fetched.
+
+```java
+byte[] v1TransactionData = ...;
+var skeleton = TransactionSkeleton.deserializeSkeleton(v1TransactionData);
+int version = skeleton.version(); // 1
+AccountMeta[] accounts = skeleton.parseAccounts();
+Instruction[] instructions = skeleton.parseInstructions(accounts);
+long priorityFeeLamports = skeleton.priorityFeeLamports();
+int computeUnitLimit = skeleton.computeUnitLimit();
+```
+
+Deserialization reads the wire structure; it does not establish signature validity
+or whether a transaction would execute successfully on a cluster.
+
 ## Creating Transactions
 
-See the [IDL clients docs for typical transaction flows.](/libraries/idl-clients#typical-transaction-flow)
+The [transaction guide](/guides/transactions) covers choosing a format, building v1
+transactions with `TxBuilder`, simulating, signing, and submitting. It also covers
+creating a v1 builder from a parsed `TransactionSkeleton` with `prototypeTransaction()`.
+
+The [IDL client examples](/libraries/idl-clients#typical-transaction-flow) show a
+supported legacy flow using generated program instructions.
