@@ -3,10 +3,6 @@ title: "25.11.0"
 description: "Transaction v1 support, explicit signing APIs, and migration from 25.10.0."
 ---
 
-<Info>
-  25.11.0 is the upcoming release. The examples using its new APIs require that version.
-</Info>
-
 ## What changes
 
 - Build transaction format v1 with `TxBuilder`, including transactions up to 4,096 bytes
@@ -15,6 +11,10 @@ description: "Transaction v1 support, explicit signing APIs, and migration from 
 - Read v1 transactions through `getTransaction` and full `getBlock` responses. The client
   advertises support through version 1; `BlockTx.skeleton()` exposes each block entry's
   format and configuration from its wire data.
+- Import JSON keys with fields in any order, skip unrelated fields, and receive
+  errors that identify missing required fields.
+- Use equal instructions interchangeably in hash-based collections, even when their
+  data comes from different arrays or offsets.
 
 Start with the [transaction guide](/guides/transactions) for a complete v1 flow.
 V1 submission requires a cluster that has activated the format. Upgrading Sava does
@@ -37,6 +37,23 @@ sysvar accessors also remain.
 | `ExtensionType` and `TokenExtension.extensionType()` | Use concrete extension types for dispatch and `ordinal()` for the on-chain type ID. |
 | `RpcEncoding.base58` | Request `RpcEncoding.base64`, or `base64_zstd` where supported. |
 | `Transaction.MAX_SERIALIZED_LENGTH` | Use the transaction's `exceedsSizeLimit()` method. |
+
+## JSON key import
+
+`PrivateKeyEncoding.fromJsonPrivateKey` accepts `encoding`, `secret`, and the optional
+`pubKey` in any order. Unknown fields are skipped, including nested objects and
+arrays; fields inside them cannot supply or override the imported key. A supplied
+public key is still checked against the derived key. Missing `encoding` or `secret`
+fields now raise `IllegalStateException` naming the missing field.
+
+## Instructions in hash-based collections
+
+For valid data spans, factory-created instructions now hash their data by content,
+consistently with `equals`. Equal instructions can be used interchangeably as
+`HashMap` keys and `HashSet` entries even when backed by different arrays or offsets.
+Hash values change; do not persist them as identifiers. Keep the retained account
+list, public keys, and data unchanged while an instruction is stored in a hash-based
+collection, or copy mutable inputs before construction.
 
 ## Signature verification
 
@@ -108,6 +125,6 @@ signer's key against its signature position; the explicit-offset helper trusts t
 By-key signing validates the complete assignment before writing signatures.
 
 The existing single-signer, explicit-index, and `Collection<Signer>` overloads remain
-undeprecated. Named positional aliases delegate to the corresponding existing overload,
+undeprecated. Named instance positional aliases delegate to the corresponding existing overload,
 including custom convenience overrides. New instance methods have defaults, so existing
 `Transaction` implementations do not need additional method overrides.

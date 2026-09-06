@@ -36,49 +36,42 @@ whose endpoint supports v1 and whose request timeout fits your application.
 ```java
 import software.sava.core.accounts.Signer;
 import software.sava.core.tx.Instruction;
-import software.sava.core.tx.Transaction;
 import software.sava.core.tx.TxBuilder;
 import software.sava.rpc.json.http.client.SolanaRpcClient;
 import software.sava.rpc.json.http.request.Commitment;
 
 public final class TransactionExample {
 
-  public static String sendV1(
-      SolanaRpcClient rpcClient,
-      Instruction instruction,
-      Signer signer,
-      long priorityFeeLamports) {
+  public static String sendV1(final SolanaRpcClient rpcClient,
+                              final Instruction instruction,
+                              final Signer signer,
+                              final long priorityFeeLamports) {
 
-    Transaction tx = TxBuilder.createBuilder()
+    var tx = TxBuilder.createBuilder()
         .feePayer(signer.publicKey())
         .addInstruction(instruction)
         .priorityFeeLamports(priorityFeeLamports)
         .createTransaction();
 
-    var simulation = rpcClient.simulateTransaction(
-        Commitment.CONFIRMED, tx, true).join();
+    final var simulation = rpcClient.simulateTransaction(Commitment.CONFIRMED, tx, true).join();
     if (simulation.error() != null) {
-      throw new IllegalStateException(
-          "Simulation failed: " + simulation.error() + " " + simulation.logs());
+      throw new IllegalStateException("Simulation failed: " + simulation.error() + " " + simulation.logs());
     }
 
     if (simulation.unitsConsumed().isPresent()) {
-      int used = simulation.unitsConsumed().getAsInt();
-      int limit = (int) Math.min(1_400_000L,
-          used + Math.max(1_000L, used / 10L));
+      final int used = simulation.unitsConsumed().getAsInt();
+      final int limit = (int) Math.min(1_400_000L, used + Math.max(1_000L, used / 10L));
       tx = tx.setComputeUnitLimit(limit);
     }
-    int loadedBytes = simulation.loadedAccountsDataSize();
+    final int loadedBytes = simulation.loadedAccountsDataSize();
     if (loadedBytes > 0) {
-      int limit = (int) Math.min(64L * 1024 * 1024,
-          loadedBytes + Math.max(1_024L, loadedBytes / 10L));
+      final int limit = (int) Math.min(64L * 1024 * 1024, loadedBytes + Math.max(1_024L, loadedBytes / 10L));
       tx = tx.setAccountDataSizeLimit(limit);
     }
 
     tx.setRecentBlockHash(simulation.replacementBlockHash().blockhash());
     tx.sign(signer);
-    return rpcClient.sendTransaction(
-        Commitment.CONFIRMED, tx.base64EncodeToString()).join();
+    return rpcClient.sendTransaction(Commitment.CONFIRMED, tx.base64EncodeToString()).join();
   }
 }
 ```
@@ -123,7 +116,7 @@ Legacy/v0 compute-unit prices use **micro-lamports per CU**. A v1 priority fee u
 **total lamports**. Convert explicitly when starting from a compute-unit price:
 
 ```java
-TxBuilder builder = TxBuilder.createBuilder()
+final var builder = TxBuilder.createBuilder()
     .computeUnitLimit(200_000)
     .priorityFeeLamportsFromComputeUnitPrice(5_000);
 // The resulting priority fee is 1,000 lamports.
@@ -141,10 +134,10 @@ the calculation directly.
 For legacy or v1, all account addresses are present in the transaction bytes:
 
 ```java
-var skeleton = TransactionSkeleton.deserializeSkeleton(serializedTransaction);
-var accounts = skeleton.parseAccounts();
-var instructions = skeleton.parseInstructions(accounts);
-Transaction restored = skeleton.createTransaction();
+final var skeleton = TransactionSkeleton.deserializeSkeleton(serializedTransaction);
+final var accounts = skeleton.parseAccounts();
+final var instructions = skeleton.parseInstructions(accounts);
+final var restored = skeleton.createTransaction();
 ```
 
 Use `isLegacy()` to identify legacy messages and `version()` to distinguish v0 from
@@ -156,11 +149,10 @@ For v0, obtain the tables named by `skeleton.lookupTableAccounts()` and supply a
 instructions to a new v1 transaction:
 
 ```java
-var skeleton = TransactionSkeleton.deserializeSkeleton(serializedV0Transaction);
-var resolvedAccounts = skeleton.parseAccounts(lookupTables);
-TxBuilder builder = skeleton.prototypeTransaction(
-    skeleton.parseInstructions(resolvedAccounts));
-Transaction v1 = builder.createTransaction();
+final var skeleton = TransactionSkeleton.deserializeSkeleton(serializedV0Transaction);
+final var resolvedAccounts = skeleton.parseAccounts(lookupTables);
+final var builder = skeleton.prototypeTransaction(skeleton.parseInstructions(resolvedAccounts));
+final var v1 = builder.createTransaction();
 ```
 
 For legacy or v1, `skeleton.prototypeTransaction()` can resolve the accounts

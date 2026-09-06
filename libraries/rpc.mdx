@@ -7,7 +7,7 @@ description: 'HTTP and WebSocket JSON RPC Clients.'
 
 ## [Dependencies](https://github.com/sava-software/sava/blob/main/sava-rpc/src/main/java/module-info.java)
   - java.net.http
-  - software.sava.json.iterator
+  - systems.comodal.json_iterator
   - software.sava.core
 
 ## Features
@@ -93,7 +93,7 @@ System.out.format("Retrieved %d tables which are active and frozen.%n", accountI
 
 ### Fetch Transactions & Blocks
 
-Since 25.11.0, the built-in client automatically requests
+The built-in client automatically requests
 `maxSupportedTransactionVersion: 1` for `getTransaction` and for `getBlock` with
 `BlockTxDetails.full`. Both requests use Base64 transaction bytes. Other block-detail
 modes omit the version ceiling; request `full` to retrieve serialized transactions.
@@ -157,12 +157,10 @@ and submission, including how to adjust v1 limits after simulation.
 
 ### Request Encodings
 
-In 25.11.0, `RpcEncoding.base58` was removed. Use `RpcEncoding.base64`, or
-`RpcEncoding.base64_zstd` (`base64+zstd`) for account requests that support compression.
-`RpcEncoding.parseEncoding` returns `null` for `base58`; existing incoming Base58
-account-data decoding remains supported. Transaction fetch, simulation, and submission
+Use `RpcEncoding.base64`, or `RpcEncoding.base64_zstd` (`base64+zstd`) for account
+requests that support compression. Transaction fetch, simulation, and submission
 use Base64. Account parsing remains client-side through the typed account factories;
-`jsonParsed` is intentionally absent. See the [25.11.0 migration notes](/releases/25.11.0).
+`jsonParsed` is intentionally absent.
 
 ## WebSocket
 

@@ -54,9 +54,8 @@ into a sealed type hierarchy. Unrecognized type IDs in well-formed TLV data are 
 as `UnknownTokenExtension` with their on-chain type value and raw data. Truncated TLV
 values, mismatched fixed-size extension lengths, and duplicate extension IDs are rejected.
 
-`ordinal()` exposes the stable on-chain type ID. In 25.11.0, use `tokenExtensions()` and
-concrete types in place of the removed enum/map accessors; see the
-[Token-2022 migration notes](/releases/25.11.0#token-2022-extensions).
+`tokenExtensions()` returns the parsed extensions. Match their concrete types when
+handling them; `ordinal()` exposes each extension's stable on-chain type ID.
 
 ```java
 var token2022 = Token2022.read(mintAddress, accountData);
@@ -66,7 +65,7 @@ for (var extension : token2022.tokenExtensions()) {
         System.out.format("Transfer fee: %d bps, max %d%n", feeBasisPoints, maxFee);
     case TokenMetadata metadata -> System.out.println(metadata.name());
     case UnknownTokenExtension(int type, byte[] data) ->
-        System.out.println("New extension released, type " + type);
+        System.out.println("Unknown extension type " + type);
     default -> {
     }
   }
@@ -84,8 +83,8 @@ ProgramDerivedAddress pda = PublicKey.findProgramAddress(seeds, programId);
 ## Private Key Parsing
 
 <Info>
-  `JsonIterator` is provided by the transitive
-  [json-iterator](https://github.com/comodal/json-iterator) dependency of `sava-rpc`.
+  `PrivateKeyEncoding` is provided by `sava-rpc`. `JsonIterator` comes from its
+  transitive [json-iterator](https://github.com/comodal/json-iterator) dependency.
 </Info>
 
 ### Usage
@@ -98,8 +97,10 @@ var signer = PrivateKeyEncoding.fromJsonPrivateKey(ji);
 
 ### JSON Configuration
 
-If the base58 encoded public key is configured via `pubKey` it will be used to further validate the public key derived
-from the private key.
+A JSON object requires `encoding` and `secret`; fields may appear in any order.
+Unknown fields are skipped, including nested objects and arrays. If the base58
+encoded public key is supplied as `pubKey`, it is checked against the public key
+derived from the private key.
 
 #### Solana CLI Key Pair JSON Array
 
