@@ -1,175 +1,81 @@
 ---
 title: "Transactions"
-description: "Build, simulate, sign, submit, and inspect Solana transactions with sava."
+description: "Build, simulate, sign, and submit Solana transactions."
 ---
 
-Transaction construction and signing live in [sava-core](/libraries/core).
-[sava-rpc](/libraries/rpc) supplies simulation, submission, and confirmation APIs.
-Instructions can come from core program helpers or [generated IDL clients](/libraries/idl-clients).
-
-## Choose a format
+## Transaction Formats
 
 | Format | Construction | Address lookup tables |
 | --- | --- | --- |
 | Legacy | `Transaction.createTx(feePayer, instruction)` | No |
-| v0 | `Transaction.createTx(feePayer, instructions, lookupTable)` with a non-null table | Yes |
-| v1 | `TxBuilder.createBuilder()` | No; all account addresses are included directly |
+| v0 | `Transaction.createTx(feePayer, instructions, lookupTable)` | Yes |
+| v1 | `TxBuilder.createBuilder()` | No |
 
-`TxBuilder` currently builds **only v1** transactions. Sending one requires a
-cluster with v1 enabled. The legacy and v0 factories remain available and are not
-deprecated. Use the format supported by your target cluster.
+`TxBuilder` builds v1 transactions. Use it with a cluster that has activated v1;
+legacy and v0 factories remain available.
 
-The builder enables strict validation by default: 1–64 instructions, at most 64
-accounts, 12 required signatures, and 4,096 serialized bytes. `builder.strict(false)`
-disables these policy checks; it does not enable cluster support or remove every
-wire-format constraint.
-
-## Build, simulate, sign, and submit
-
-This example accepts an RPC client, one instruction, and a signer who also pays
-the transaction fee. The instruction must not require additional signers.
-The priority fee argument is the total priority fee in lamports.
-
-The method blocks on the client's `CompletableFuture` results. Supply an RPC client
-whose endpoint supports v1 and whose request timeout fits your application.
+## Build, Simulate, Sign, and Submit
 
 ```java
-import software.sava.core.accounts.Signer;
-import software.sava.core.tx.Instruction;
-import software.sava.core.tx.TxBuilder;
-import software.sava.rpc.json.http.client.SolanaRpcClient;
-import software.sava.rpc.json.http.request.Commitment;
+final var tx = TxBuilder.createBuilder()
+    .feePayer(signer.publicKey())
+    .addInstruction(instruction)
+    .priorityFeeLamports(priorityFeeLamports)
+    .createTransaction();
 
-public final class TransactionExample {
-
-  public static String sendV1(final SolanaRpcClient rpcClient,
-                              final Instruction instruction,
-                              final Signer signer,
-                              final long priorityFeeLamports) {
-
-    var tx = TxBuilder.createBuilder()
-        .feePayer(signer.publicKey())
-        .addInstruction(instruction)
-        .priorityFeeLamports(priorityFeeLamports)
-        .createTransaction();
-
-    final var simulation = rpcClient.simulateTransaction(Commitment.CONFIRMED, tx, true).join();
-    if (simulation.error() != null) {
-      throw new IllegalStateException("Simulation failed: " + simulation.error() + " " + simulation.logs());
-    }
-
-    if (simulation.unitsConsumed().isPresent()) {
-      final int used = simulation.unitsConsumed().getAsInt();
-      final int limit = (int) Math.min(1_400_000L, used + Math.max(1_000L, used / 10L));
-      tx = tx.setComputeUnitLimit(limit);
-    }
-    final int loadedBytes = simulation.loadedAccountsDataSize();
-    if (loadedBytes > 0) {
-      final int limit = (int) Math.min(64L * 1024 * 1024, loadedBytes + Math.max(1_024L, loadedBytes / 10L));
-      tx = tx.setAccountDataSizeLimit(limit);
-    }
-
-    tx.setRecentBlockHash(simulation.replacementBlockHash().blockhash());
-    tx.sign(signer);
-    return rpcClient.sendTransaction(Commitment.CONFIRMED, tx.base64EncodeToString()).join();
-  }
+final var simulation = rpcClient.simulateTransaction(Commitment.CONFIRMED, tx, true).join();
+if (simulation.error() != null) {
+  throw new IllegalStateException("Simulation failed: " + simulation.error());
 }
+
+simulation.unitsConsumed().ifPresent(used -> {
+  final long limit = used + Math.max(1_000L, used / 10);
+  tx.setComputeUnitLimit(Math.clamp(limit, 0, 1_400_000));
+});
+final int loadedBytes = simulation.loadedAccountsDataSize();
+if (loadedBytes > 0) {
+  final long limit = loadedBytes + Math.max(1_024L, loadedBytes / 10);
+  tx.setAccountDataSizeLimit(Math.clamp(limit, 0, 64 * 1024 * 1024));
+}
+
+tx.setRecentBlockHash(simulation.replacementBlockHash().blockhash());
+tx.sign(signer);
+final var signature = rpcClient.sendTransaction(Commitment.CONFIRMED, tx.base64EncodeToString()).join();
 ```
 
-The simulation call disables signature verification and requests a replacement
-blockhash. Apply `simulation.replacementBlockHash().blockhash()` to the local
-transaction after adjusting budgets, then sign the final message. The example keeps
-default budgets when measurements are unavailable and adds illustrative margins
-when they are present; choose margins for your program's possible execution paths.
-Submission above keeps preflight enabled.
+Simulation supplies the blockhash. The example adds budget margins; adjust them for
+your program. Submission returns a signature; confirmation is a separate step.
 
-A returned signature identifies the submitted transaction. Confirmation and checking
-its execution result are separate steps; use signature subscriptions or
-`getSignatureStatuses` in your application's confirmation flow.
+## Budgets and Priority Fees
 
-## V1 budgets and priority fees
+The builder defaults to 1,400,000 compute units and 64 MiB of loaded account data.
+Zero omits either field and leaves a zero budget, so do not use zero to request defaults.
+V1 transaction setters update fields already present; rebuild to add an omitted field.
 
-V1 stores budgets in message configuration values instead of compute-budget
-instructions. Builder defaults deliberately include the CU and loaded-data fields
-so they can be tightened after simulation.
-
-| Builder setting | Default | Meaning of zero |
-| --- | --- | --- |
-| `computeUnitLimit(int)` | 1,400,000 CU | Omit the field; effective v1 CU budget is zero |
-| `accountDataSizeLimit(int)` | 64 MiB | Omit the field; effective v1 loaded-data budget is zero |
-| `priorityFeeLamports(long)` | 0 lamports | Omit the field; no priority fee |
-| `heapSize(int)` | 0, omitted | Use the default 32 KiB heap |
-
-An explicit heap request must be a multiple of 1 KiB from 32 through 256 KiB in
-strict mode. Do not set CU or loaded-data limits to zero to request the defaults.
-For a v1 transaction, budget setters update existing configuration fields in place.
-Setting a field that was omitted throws `IllegalStateException`. Rebuild with a
-nonzero value to include that field.
-
-For legacy and v0 transactions, the same transaction budget setters return a new
-transaction with compute-budget instructions added or replaced. Assign the result,
-as in `tx = tx.setComputeUnitLimit(limit)`, when code may handle either format.
-Change budgets and the blockhash before signing; message changes require new
-signatures.
-
-Legacy/v0 compute-unit prices use **micro-lamports per CU**. A v1 priority fee uses
-**total lamports**. Convert explicitly when starting from a compute-unit price:
+V1 priority fees are **total lamports**. To convert a legacy/v0 price in
+**micro-lamports per compute unit**:
 
 ```java
 final var builder = TxBuilder.createBuilder()
     .computeUnitLimit(200_000)
     .priorityFeeLamportsFromComputeUnitPrice(5_000);
-// The resulting priority fee is 1,000 lamports.
+// Priority fee: 1,000 lamports.
 ```
 
-This is a one-time conversion against the builder's current CU limit, capped at
-1.4 million and rounded up to whole lamports. Changing the CU limit afterward does
-not change the fee. Call the conversion again if the fee should follow the new
-limit. `TxBuilder.computeUnitPriceToPriorityFeeLamports(price, limit)` also exposes
-the calculation directly.
+The conversion uses the current compute limit once. Changing that limit later does
+not change the fee; convert again if needed.
 
-## Deserialize and rebuild
+## Read and Rebuild
 
-`TransactionSkeleton.deserializeSkeleton(byte[])` detects legacy, v0, and v1.
-For legacy or v1, all account addresses are present in the transaction bytes:
+`TransactionSkeleton.deserializeSkeleton` reads all three formats. For legacy or v1:
 
 ```java
 final var skeleton = TransactionSkeleton.deserializeSkeleton(serializedTransaction);
 final var accounts = skeleton.parseAccounts();
 final var instructions = skeleton.parseInstructions(accounts);
-final var restored = skeleton.createTransaction();
 ```
 
-Use `isLegacy()` to identify legacy messages and `version()` to distinguish v0 from
-v1. `parseInstructionsWithoutTableAccounts()` is also usable without lookup tables;
-v0 references to table-loaded accounts remain unresolved as null account entries.
-
-For v0, obtain the tables named by `skeleton.lookupTableAccounts()` and supply a
-`Map<PublicKey, AddressLookupTable>` when parsing accounts. To convert the resolved
-instructions to a new v1 transaction:
-
-```java
-final var skeleton = TransactionSkeleton.deserializeSkeleton(serializedV0Transaction);
-final var resolvedAccounts = skeleton.parseAccounts(lookupTables);
-final var builder = skeleton.prototypeTransaction(skeleton.parseInstructions(resolvedAccounts));
-final var v1 = builder.createTransaction();
-```
-
-For legacy or v1, `skeleton.prototypeTransaction()` can resolve the accounts
-directly. The no-argument form rejects v0 messages that use table-loaded accounts;
-resolve their tables first as above. Prototyping carries instructions and budget
-configuration into a v1 builder, filtering compute-budget instructions. For a
-legacy/v0 source without explicit CU or loaded-data limits, it keeps the builder's
-maximum defaults. The converted priority fee uses an estimated CU limit when the
-source has no explicit limit, so review the fee after simulation.
-It does not preserve signatures or the recent blockhash. Simulate as appropriate,
-set a fresh blockhash, and sign the rebuilt transaction before submission.
-
-## V1 message fields
-
-V1 keeps the required-signature, read-only signed-account, and read-only
-unsigned-account header counts. Its configuration mask selects the serialized
-priority-fee, CU-limit, loaded-data-limit, and heap-size values. Instruction headers
-precede their account-index and data payloads, and signatures follow the message.
-Use `Transaction` and `TransactionSkeleton` to handle these layouts rather than
-assuming legacy/v0 byte offsets when inspecting a v1 buffer.
+For v0 with lookup-table accounts, use `skeleton.parseAccounts(lookupTables)` with a
+`Map<PublicKey, AddressLookupTable>` before parsing instructions.
+`skeleton.prototypeTransaction(instructions)` creates a v1 builder from the resolved
+instructions and budgets. Set a fresh blockhash and sign the rebuilt transaction.
